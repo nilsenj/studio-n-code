@@ -113,12 +113,13 @@ function registerBoardAI(vscode, context, report) {
       plan: 'Give a practical step-by-step plan grounded in the supplied context. Do not claim to have changed files.',
       edit: 'Return the complete replacement contents for the selected single file in one fenced code block. Do not include commentary outside that block. Preserve unrelated behavior.',
     }[mode];
-    const messages = [{ role: 'system', content: `You assist with code in studio-n-code. ${modeInstruction}` },
+    const responseSize = ({ concise: { tokens: 700, guidance: 'Keep the answer concise: about 150 to 250 words. Lead with the direct answer, use short bullets, and omit background the user did not ask for.' }, standard: { tokens: 1600, guidance: 'Give a clear, dense answer of about 300 to 600 words. Use headings and short bullets where they improve scanning.' }, detailed: { tokens: 3200, guidance: 'Give a thorough answer of about 700 to 1000 words, using headings and compact bullets.' } })[message.responseSize] || { tokens: 700, guidance: 'Keep the answer concise: about 150 to 250 words. Lead with the direct answer, use short bullets, and omit background the user did not ask for.' };
+    const messages = [{ role: 'system', content: `You assist with code in studio-n-code. ${modeInstruction} ${responseSize.guidance} Format normal prose responses with Markdown. Keep code edits in their required complete fenced block.` },
       ...conversation.slice(-8), { role: 'user', content: `Context (may be truncated):\n${source || '[No file selected]'}\n\nRequest: ${prompt}` }];
     const controller = new AbortController(); request = controller;
     let answer = '';
     try {
-      answer = await complete({ provider, baseUrl: context.globalState.get(`studio.aiBase.${provider}`), model, key, messages,
+      answer = await complete({ provider, baseUrl: context.globalState.get(`studio.aiBase.${provider}`), model, key, messages, maxOutputTokens: responseSize.tokens,
         signal: controller.signal, requireDone: mode === 'edit', onDelta: text => { void aiPanel?.webview.postMessage({ type: 'delta', text }); } });
       if (mode === 'edit') {
         proposal = { ...file, replacement: extractReplacement(answer) };

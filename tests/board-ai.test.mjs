@@ -75,6 +75,28 @@ test('AI mode streams a real local compatible response and sends selected code c
   } finally { server.close(); }
 });
 
+test('AI output size is bounded for each provider', async () => {
+  const calls = [];
+  const server = http.createServer(async (request, response) => {
+    let body = ''; for await (const chunk of request) body += chunk;
+    calls.push({ path: request.url, body: JSON.parse(body) });
+    response.writeHead(200, { 'content-type': 'text/event-stream' });
+    response.end(request.url === '/v1/chat/completions' ? 'data: {"choices":[{"delta":{"content":"ok"}}]}\n\ndata: [DONE]\n\n'
+      : request.url === '/messages' ? 'event: content_block_delta\ndata: {"delta":{"type":"text_delta","text":"ok"}}\n\nevent: message_stop\ndata: {}\n\n'
+        : 'data: {"event_type":"step.delta","delta":{"type":"text","text":"ok"}}\n\ndata: {"event_type":"interaction.completed"}\n\n');
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const baseUrl = `http://127.0.0.1:${server.address().port}`;
+    await complete({ provider: 'openai', baseUrl: `${baseUrl}/v1`, model: 'gpt-test', key: 'test', maxOutputTokens: 700, messages: [{ role: 'user', content: 'Short' }] });
+    await complete({ provider: 'anthropic', baseUrl, model: 'claude-test', key: 'test', maxOutputTokens: 1600, messages: [{ role: 'user', content: 'Medium' }] });
+    await complete({ provider: 'gemini', baseUrl, model: 'gemini-test', key: 'test', maxOutputTokens: 3200, messages: [{ role: 'user', content: 'Long' }] });
+    assert.equal(calls[0].body.max_completion_tokens, 700);
+    assert.equal(calls[1].body.max_tokens, 1600);
+    assert.equal(calls[2].body.max_output_tokens, 3200);
+  } finally { server.close(); }
+});
+
 test('model discovery normalizes and filters generation models and recommends a balanced choice', async () => {
   const server = http.createServer((request, response) => {
     assert.equal(request.url, '/v1beta/models?pageSize=100');

@@ -103,20 +103,21 @@ function endpointFor(provider, base, model) {
   return apiUrl(root, provider === 'anthropic' ? '/messages' : '/interactions');
 }
 
-async function complete({ provider = 'openai', endpoint, baseUrl, model, key = '', messages, signal, onDelta = () => {}, requireDone = false }) {
+async function complete({ provider = 'openai', endpoint, baseUrl, model, key = '', messages, signal, onDelta = () => {}, requireDone = false, maxOutputTokens = 1200 }) {
   if (!model?.trim()) throw new Error('Choose a discovered AI model in AI Mode settings.');
   const base = baseUrl || endpoint || PROVIDERS[provider]?.base;
   const url = endpointFor(provider, base, model);
   let headers = { 'Content-Type': 'application/json', Accept: 'text/event-stream' }; let body;
-  if (provider === 'openai') { if (key) headers.Authorization = `Bearer ${key}`; body = { model: model.trim(), messages, stream: true }; }
+  const outputLimit = Math.max(256, Math.min(8192, Math.floor(Number(maxOutputTokens) || 1200)));
+  if (provider === 'openai') { if (key) headers.Authorization = `Bearer ${key}`; body = { model: model.trim(), messages, stream: true, max_completion_tokens: outputLimit }; }
   if (provider === 'anthropic') {
     headers['x-api-key'] = key; headers['anthropic-version'] = '2023-06-01';
     const system = messages.filter(item => item.role === 'system').map(item => item.content).join('\n');
-    body = { model: model.trim(), max_tokens: 4096, stream: true, ...(system ? { system } : {}), messages: messages.filter(item => item.role !== 'system') };
+    body = { model: model.trim(), max_tokens: outputLimit, stream: true, ...(system ? { system } : {}), messages: messages.filter(item => item.role !== 'system') };
   }
   if (provider === 'gemini') {
     headers['x-goog-api-key'] = key;
-    body = { model: model.trim(), stream: true, input: messages.filter(item => item.role !== 'system').map(item => ({ type: item.role === 'assistant' ? 'model_output' : 'user_input', content: [{ type: 'text', text: item.content }] })), ...(messages.find(item => item.role === 'system') ? { system_instruction: messages.find(item => item.role === 'system').content } : {}) };
+    body = { model: model.trim(), stream: true, max_output_tokens: outputLimit, input: messages.filter(item => item.role !== 'system').map(item => ({ type: item.role === 'assistant' ? 'model_output' : 'user_input', content: [{ type: 'text', text: item.content }] })), ...(messages.find(item => item.role === 'system') ? { system_instruction: messages.find(item => item.role === 'system').content } : {}) };
   }
   const response = await fetch(url, { method: 'POST', signal, headers, body: JSON.stringify(body) });
   if (!response.ok) throw new Error(`${providerLabel(provider)} request returned ${response.status}. Check provider access, model and quota.`);

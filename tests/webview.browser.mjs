@@ -108,3 +108,21 @@ test('AI Mode automatically discovers saved provider models without sending a sa
     assert.match(await page.locator('#model-note').textContent(), /Balanced recommendation/);
   } finally { await page.close(); }
 });
+
+test('AI Mode sends the selected response size and renders safe Markdown', async () => {
+  const page = await browser.newPage();
+  try {
+    const html = (await readFile(new URL('../customizations/studio-workbench/ui/ai.html', import.meta.url), 'utf8')).replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/, '').replace(/<script nonce="\{\{NONCE\}\}" src="\{\{SCRIPT\}\}"><\/script>/, '');
+    await page.setContent(html);
+    await page.evaluate(() => { window.sent = []; window.acquireVsCodeApi = () => ({ postMessage: message => window.sent.push(message) }); });
+    await page.addScriptTag({ content: await readFile(new URL('../customizations/studio-workbench/ui/ai.js', import.meta.url), 'utf8') });
+    await page.locator('#prompt').fill('Explain this');
+    await page.locator('#response-size').selectOption('detailed');
+    await page.locator('#send').click();
+    assert.deepEqual(await page.evaluate(() => window.sent.at(-1)), { type: 'ask', mode: 'ask', prompt: 'Explain this', responseSize: 'detailed' });
+    await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { data: { type: 'delta', text: '## Purpose\n\n- **Safe** output\n\n```js\nalert(1)\n```\n<script>bad()</script>' } })));
+    const result = await page.locator('.message.assistant .content').evaluate(element => ({ heading: element.querySelector('h2')?.textContent, bold: element.querySelector('strong')?.textContent, item: element.querySelector('li')?.textContent, code: element.querySelector('pre code')?.textContent, script: element.querySelector('script'), text: element.textContent }));
+    assert.deepEqual({ heading: result.heading, bold: result.bold, item: result.item, code: result.code, hasScript: !!result.script }, { heading: 'Purpose', bold: 'Safe', item: 'Safe output', code: 'alert(1)', hasScript: false });
+    assert.match(result.text, /<script>bad\(\)<\/script>/);
+  } finally { await page.close(); }
+});
