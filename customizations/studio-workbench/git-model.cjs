@@ -2,6 +2,23 @@
 const path = require('node:path');
 const statuses = ['M', 'A', 'D', 'R', 'C', 'M', 'D', '?', 'I', 'A', 'R', 'T'];
 
+function selectRepository(repositories, { chosenRoot, workspaceRoot, activeRepository, platform = process.platform } = {}) {
+  if (chosenRoot) {
+    const chosen = repositories.find(repository => repository.rootUri.toString() === chosenRoot);
+    if (chosen) return chosen;
+  }
+  if (workspaceRoot) {
+    const normalize = value => {
+      const resolved = path.resolve(value).replace(/[\\/]+$/, '');
+      return platform === 'win32' ? resolved.toLowerCase() : resolved;
+    };
+    const root = normalize(workspaceRoot);
+    const project = repositories.find(repository => normalize(repository.rootUri.fsPath) === root);
+    if (project) return project;
+  }
+  return activeRepository || repositories[0];
+}
+
 function changesFromState(state, root) {
   const files = new Map();
   for (const [group, flag] of [[state.indexChanges || [], 'staged'], [state.workingTreeChanges || [], 'working'], [state.untrackedChanges || [], 'working'], [state.mergeChanges || [], 'conflict']]) {
@@ -49,4 +66,4 @@ function graphRows(commits) {
   return rows;
 }
 
-module.exports = { changesFromState, validateCommitSelection, graphRows };
+module.exports = { changesFromState, validateCommitSelection, graphRows, selectRepository };

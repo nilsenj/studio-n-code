@@ -24,7 +24,7 @@ Node.js, npm, Python and C++ Build Tools are not required to install or launch t
 The preview is unsigned. Windows may show an unknown-publisher message; verify the repository/download before choosing to run it. Compare the complete hash with the matching filename in the release's `SHA256SUMS.txt`:
 
 ```powershell
-Get-FileHash .\studio-n-code-0.2.2-windows-x64-setup.exe -Algorithm SHA256
+Get-FileHash .\studio-n-code-0.2.3-windows-x64-setup.exe -Algorithm SHA256
 ```
 
 ## Portable ZIP

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const { changesFromState, validateCommitSelection, graphRows } = require('../customizations/studio-workbench/git-model.cjs');
+const { changesFromState, validateCommitSelection, graphRows, selectRepository } = require('../customizations/studio-workbench/git-model.cjs');
 const change = (file, status) => ({ uri: { fsPath: file }, status });
 
 test('commit checklist merges staged and working changes without losing file status', () => {
@@ -47,4 +47,16 @@ test('graph follows actual parent edges through branches and merges', () => {
     assert.ok(Number.isInteger(row.lane) && row.lane >= 0);
     for (const edge of row.parents) assert.ok(edge.row > row.row);
   }
+});
+
+test('Git header selects the opened workspace repository before a nested upstream checkout', () => {
+  const upstream = { rootUri: { fsPath: 'C:\\repo\\upstream', toString: () => 'file:///C:/repo/upstream' }, state: { HEAD: { commit: 'tag-1.143.1' } } };
+  const project = { rootUri: { fsPath: 'C:\\repo', toString: () => 'file:///C:/repo' }, state: { HEAD: { name: 'main' } } };
+  assert.equal(selectRepository([upstream, project], { workspaceRoot: 'C:\\repo', platform: 'win32' }), project);
+});
+
+test('explicitly selected repository takes precedence over the active project repository', () => {
+  const nested = { rootUri: { fsPath: '/repo/upstream', toString: () => 'file:///repo/upstream' } };
+  const project = { rootUri: { fsPath: '/repo', toString: () => 'file:///repo' } };
+  assert.equal(selectRepository([nested, project], { chosenRoot: 'file:///repo/upstream', workspaceRoot: '/repo', platform: 'linux' }), nested);
 });

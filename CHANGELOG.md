@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3 — 2026-10-27
+
+- Fix the Git header branch selector choosing the nested upstream editor checkout instead of the opened project repository.
+
 ## 0.2.2 — 2026-10-27
 
 - Linux x64 Ubuntu 22.04 package, checksum-verified per-user installer, and release automation alongside Windows assets.

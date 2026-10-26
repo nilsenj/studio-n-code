@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { execFile } = require('node:child_process');
-const { changesFromState, validateCommitSelection, graphRows } = require('./git-model.cjs');
+const { changesFromState, validateCommitSelection, graphRows, selectRepository } = require('./git-model.cjs');
 
 function registerGitTools(vscode, context, report) {
   let git;
@@ -42,9 +42,11 @@ function registerGitTools(vscode, context, report) {
 
   async function repository() {
     const current = await api();
-    return current.repositories.find(repo => repo.rootUri.toString() === chosenRoot)
-      || (vscode.window.activeTextEditor && current.getRepository(vscode.window.activeTextEditor.document.uri))
-      || current.repositories[0];
+    const activeEditor = vscode.window.activeTextEditor;
+    const workspace = activeEditor && vscode.workspace.getWorkspaceFolder(activeEditor.document.uri)
+      || vscode.workspace.workspaceFolders?.[0];
+    const activeRepository = activeEditor && current.getRepository(activeEditor.document.uri);
+    return selectRepository(current.repositories, { chosenRoot, workspaceRoot: workspace?.uri.fsPath, activeRepository });
   }
 
   let refreshTimer;
