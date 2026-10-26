@@ -3,8 +3,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { realpath } = require('node:fs/promises');
-const { loadBoard, contextForCard, boardContext } = require('./code-board.cjs');
-const { complete, compatibleEndpoint, extractReplacement } = require('./ai-mode.cjs');
+const { loadBoard, contextForCard, boardContext, detailForCard } = require('./code-board.cjs');
+const { complete, compatibleEndpoint, extractReplacement, listModels, recommendModel, PROVIDERS } = require('./ai-mode.cjs');
 
 function registerBoardAI(vscode, context, report) {
   let boardPanel, aiPanel, board, selected, request, proposal, explainOnOpen = false;
@@ -63,8 +63,11 @@ function registerBoardAI(vscode, context, report) {
 
   async function sendSettings() {
     if (!aiPanel) return;
-    await aiPanel.webview.postMessage({ type: 'settings', endpoint: context.globalState.get('studio.aiEndpoint', 'https://api.openai.com/v1'),
-      model: context.globalState.get('studio.aiModel', ''), hasKey: !!await context.secrets.get('studio.aiKey') });
+    const provider = context.globalState.get('studio.aiProvider', 'openai');
+    const saved = await context.globalState.get(`studio.aiModel.${provider}`) || (provider === 'openai' ? context.globalState.get('studio.aiModel', '') : '');
+    await aiPanel.webview.postMessage({ type: 'settings', provider, model: saved,
+      hasKey: !!await context.secrets.get(`studio.aiKey.${provider}`) || (provider === 'openai' && !!await context.secrets.get('studio.aiKey')),
+      base: PROVIDERS[provider]?.base });
   }
 
   async function sourceContext() {
@@ -92,9 +95,11 @@ function registerBoardAI(vscode, context, report) {
     const mode = ['ask', 'explain', 'plan', 'edit'].includes(message.mode) ? message.mode : 'ask';
     const prompt = String(message.prompt || '').trim();
     if (!prompt) throw new Error('Enter a question or instruction.');
-    const endpoint = context.globalState.get('studio.aiEndpoint', 'https://api.openai.com/v1');
-    const model = context.globalState.get('studio.aiModel', '');
+    const provider = context.globalState.get('studio.aiProvider', 'openai');
+    const model = context.globalState.get(`studio.aiModel.${provider}`, provider === 'openai' ? context.globalState.get('studio.aiModel', '') : '');
     if (!model) throw new Error('Connect a model in AI Mode settings first.');
+    const key = await context.secrets.get(`studio.aiKey.${provider}`) || (provider === 'openai' ? await context.secrets.get('studio.aiKey') : '') || '';
+    if (!key) throw new Error(`Add an API key for ${provider === 'gemini' ? 'Google Gemini' : provider === 'anthropic' ? 'Anthropic' : 'OpenAI'} in AI Mode settings.`);
     const currentRoot = selected && board ? board.root : lastEditor ? vscode.workspace.getWorkspaceFolder(lastEditor.document.uri)?.uri.fsPath : undefined;
     if (conversationRoot !== currentRoot) { conversation = []; conversationRoot = currentRoot; }
     proposal = undefined;
@@ -113,7 +118,7 @@ function registerBoardAI(vscode, context, report) {
     const controller = new AbortController(); request = controller;
     let answer = '';
     try {
-      answer = await complete({ endpoint, model, key: await context.secrets.get('studio.aiKey') || '', messages,
+      answer = await complete({ provider, baseUrl: context.globalState.get(`studio.aiBase.${provider}`), model, key, messages,
         signal: controller.signal, requireDone: mode === 'edit', onDelta: text => { void aiPanel?.webview.postMessage({ type: 'delta', text }); } });
       if (mode === 'edit') {
         proposal = { ...file, replacement: extractReplacement(answer) };
@@ -148,14 +153,27 @@ function registerBoardAI(vscode, context, report) {
     await aiPanel?.webview.postMessage({ type: 'applied' });
   }
 
-  async function configure({ endpoint, model, key }) {
-    const verified = compatibleEndpoint(endpoint).replace(/\/chat\/completions$/, '');
+  async function configure({ provider = 'openai', endpoint, model, key }) {
+    if (!PROVIDERS[provider]) throw new Error('Choose OpenAI, Gemini or Anthropic.');
+    if (endpoint) await context.globalState.update(`studio.aiBase.${provider}`, compatibleEndpoint(endpoint).replace(/\/chat\/completions$/, ''));
     const chosen = String(model || '').trim();
-    if (!chosen) throw new Error('Enter a model ID.');
-    await context.globalState.update('studio.aiEndpoint', verified);
-    await context.globalState.update('studio.aiModel', chosen);
-    if (key) await context.secrets.store('studio.aiKey', String(key));
+    if (!chosen) throw new Error('Discover and choose a model first.');
+    await context.globalState.update('studio.aiProvider', provider);
+    await context.globalState.update(`studio.aiModel.${provider}`, chosen);
+    if (key) await context.secrets.store(`studio.aiKey.${provider}`, String(key));
+    if (provider === 'openai' && await context.secrets.get('studio.aiKey') && !await context.secrets.get('studio.aiKey.openai')) {
+      await context.secrets.store('studio.aiKey.openai', await context.secrets.get('studio.aiKey'));
+    }
     await sendSettings();
+  }
+
+  async function discoverModels({ provider = 'openai', key = '' }) {
+    if (!PROVIDERS[provider]) throw new Error('Choose OpenAI, Gemini or Anthropic.');
+    const storedKey = await context.secrets.get(`studio.aiKey.${provider}`) || (provider === 'openai' ? await context.secrets.get('studio.aiKey') : '');
+    const options = await listModels(provider, key || storedKey || '');
+    const recommended = recommendModel(provider, options);
+    await aiPanel?.webview.postMessage({ type: 'models', provider, options, recommended: recommended?.id || '' });
+    return options;
   }
 
   async function receive(kind, message) {
@@ -166,8 +184,10 @@ function registerBoardAI(vscode, context, report) {
       const card = [...(board?.files || []), ...(board?.areas || []), ...(board?.changes || []), ...(board?.features || []), ...(board?.commits || [])].find(item => item.id === message.id);
       if (!card) return;
       if (message.type === 'explain') return showAI(card, true);
+      if (message.type === 'details') return boardPanel.webview.postMessage({ type: 'details', details: await detailForCard(vscode, board, card) });
       if (message.type === 'open') {
-        if (card.kind === 'commit') return vscode.commands.executeCommand('studio.git');
+        if (card.kind === 'commit') return boardPanel.webview.postMessage({ type: 'details', details: await detailForCard(vscode, board, card) });
+        if (card.kind === 'area' || card.kind === 'feature') return boardPanel.webview.postMessage({ type: 'details', details: await detailForCard(vscode, board, card) });
         if (['file', 'change'].includes(card.kind)) {
           const file = path.resolve(board.root, card.path);
           if (!file.startsWith(path.resolve(board.root) + path.sep)) throw new Error('File is outside the project.');
@@ -182,7 +202,12 @@ function registerBoardAI(vscode, context, report) {
     if (message.type === 'saveSettings') {
       return configure(message);
     }
-    if (message.type === 'clearKey') { await context.secrets.delete('studio.aiKey'); return sendSettings(); }
+    if (message.type === 'discoverModels') return discoverModels(message);
+    if (message.type === 'loadProvider') {
+      await context.globalState.update('studio.aiProvider', PROVIDERS[message.provider] ? message.provider : 'openai');
+      return sendSettings();
+    }
+    if (message.type === 'clearKey') { const provider = PROVIDERS[message.provider] ? message.provider : 'openai'; await context.secrets.delete(`studio.aiKey.${provider}`); if (provider === 'openai') await context.secrets.delete('studio.aiKey'); return sendSettings(); }
     if (message.type === 'stop') { request?.abort(); return; }
     if (message.type === 'clear') { request?.abort(); conversation = []; proposal = undefined; await aiPanel?.webview.postMessage({ type: 'cleared' }); return; }
     if (message.type === 'ask') return ask(message);

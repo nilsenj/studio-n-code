@@ -64,12 +64,47 @@ test('Code Board searches all card types and Explain carries the selected card I
     await page.locator('#tabs button').filter({ hasText: 'Files' }).click();
     await page.locator('#search').fill('app.js');
     assert.equal(await page.locator('.card').count(), 1);
-    await page.locator('.explain').click();
+    await page.locator('.card .explain').click();
     assert.deepEqual(await page.evaluate(() => window.sent.at(-1)), { type: 'explain', id: 'file:src/app.js' });
     await page.locator('#tabs button').filter({ hasText: 'Features' }).click();
     await page.locator('#search').fill('Search');
     assert.equal(await page.locator('.card').count(), 1);
-    await page.locator('.explain').click();
+    await page.locator('.card .explain').click();
     assert.deepEqual(await page.evaluate(() => window.sent.at(-1)), { type: 'explain', id: 'feature:abc' });
+  } finally { await page.close(); }
+});
+
+test('Code Board card activation opens details and modal Explain keeps the card identity', async () => {
+  const page = await browser.newPage();
+  try {
+    const html = (await readFile(new URL('../customizations/studio-workbench/ui/board.html', import.meta.url), 'utf8')).replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/, '').replace(/<script nonce="\{\{NONCE\}\}" src="\{\{SCRIPT\}\}"><\/script>/, '');
+    await page.setContent(html);
+    await page.evaluate(() => { window.sent = []; window.acquireVsCodeApi = () => ({ postMessage: message => window.sent.push(message) }); });
+    await page.addScriptTag({ content: await readFile(new URL('../customizations/studio-workbench/ui/board.js', import.meta.url), 'utf8') });
+    const board = { root: '/repo', branch: 'main', files: [{ id: 'file:src/app.js', kind: 'file', path: 'src/app.js', title: 'app.js' }], areas: [], changes: [], features: [], commits: [] };
+    await page.evaluate(value => window.dispatchEvent(new MessageEvent('message', { data: { type: 'board', board: value } })), board);
+    await page.locator('#tabs button').filter({ hasText: 'Files' }).click();
+    await page.locator('.card').click();
+    assert.deepEqual(await page.evaluate(() => window.sent.at(-1)), { type: 'details', id: 'file:src/app.js' });
+    await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { data: { type: 'details', details: { kind: 'file', title: 'app.js', path: 'src/app.js', language: 'JS', status: 'M', history: ['abc update'] } } })));
+    assert.equal(await page.locator('#details-dialog').evaluate(element => element.open), true);
+    assert.match(await page.locator('#details-content').textContent(), /src\/app\.js.*JS.*M.*abc update/s);
+    await page.locator('#details-explain').click();
+    assert.deepEqual(await page.evaluate(() => window.sent.at(-1)), { type: 'explain', id: 'file:src/app.js' });
+  } finally { await page.close(); }
+});
+
+test('AI Mode automatically discovers saved provider models without sending a saved key', async () => {
+  const page = await browser.newPage();
+  try {
+    const html = (await readFile(new URL('../customizations/studio-workbench/ui/ai.html', import.meta.url), 'utf8')).replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/, '').replace(/<script nonce="\{\{NONCE\}\}" src="\{\{SCRIPT\}\}"><\/script>/, '');
+    await page.setContent(html);
+    await page.evaluate(() => { window.sent = []; window.acquireVsCodeApi = () => ({ postMessage: message => window.sent.push(message) }); });
+    await page.addScriptTag({ content: await readFile(new URL('../customizations/studio-workbench/ui/ai.js', import.meta.url), 'utf8') });
+    await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { data: { type: 'settings', provider: 'gemini', model: 'gemini-flash', hasKey: true } })));
+    assert.deepEqual(await page.evaluate(() => window.sent.at(-1)), { type: 'discoverModels', provider: 'gemini', key: '' });
+    await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { data: { type: 'models', provider: 'gemini', options: [{ id: 'gemini-flash', label: 'Gemini Flash', recommended: true }], recommended: 'gemini-flash' } })));
+    assert.equal(await page.locator('#model').inputValue(), 'gemini-flash');
+    assert.match(await page.locator('#model-note').textContent(), /Balanced recommendation/);
   } finally { await page.close(); }
 });

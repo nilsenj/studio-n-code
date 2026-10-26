@@ -15,13 +15,14 @@ function buildBoard({ files, status = new Map(), commits = [], root = '' }) {
       if (!areas.has(prefix)) areas.set(prefix, { id: `area:${prefix}`, kind: 'area', path: prefix, title: part, fileCount: 0 });
       areas.get(prefix).fileCount++;
     }
-    return { id: `file:${file}`, kind: 'file', path: file, title: parts.at(-1), status: status.get(file) || '' };
+    const state = status.get(file) || {};
+    return { id: `file:${file}`, kind: 'file', path: file, title: parts.at(-1), status: typeof state === 'string' ? state : state.status || '', indexStatus: state.indexStatus || '', worktreeStatus: state.worktreeStatus || '' };
   });
   const changes = entries.filter(entry => entry.status).map(entry => ({ ...entry, id: `change:${entry.path}`, kind: 'change' }));
-  const history = commits.map(commit => ({ id: `commit:${commit.hash}`, kind: 'commit', hash: commit.hash, title: commit.subject, date: commit.date }));
+  const history = commits.map(commit => ({ ...commit, id: `commit:${commit.hash}`, kind: 'commit', hash: commit.hash, title: commit.subject, date: commit.commitDate || commit.date }));
   const features = commits.flatMap(commit => {
     const match = /^feat(?:\(([^)]+)\))?:\s*(.+)/i.exec(commit.subject);
-    return match ? [{ id: `feature:${commit.hash}`, kind: 'feature', hash: commit.hash, title: match[2], scope: match[1] || '', date: commit.date }] : [];
+    return match ? [{ ...commit, id: `feature:${commit.hash}`, kind: 'feature', hash: commit.hash, title: match[2], scope: match[1] || '', date: commit.commitDate || commit.date }] : [];
   });
   return { root, files: entries, areas: [...areas.values()], changes, commits: history, features, totalFiles: entries.length };
 }
@@ -50,13 +51,17 @@ async function loadBoard(vscode, folder) {
   const [rawFiles, rawStatus, rawCommits, branch] = await Promise.all([
     git(root, ['ls-files', '--cached', '--others', '--exclude-standard', '-z']),
     git(root, ['status', '--porcelain=v1', '--untracked-files=all', '--no-renames', '-z']),
-    git(root, ['log', '--all', '--format=%H%x00%s%x00%aI', '-n', '200']).catch(() => ''),
+    git(root, ['log', '--all', '--format=%H%x1f%s%x1f%an%x1f%ae%x1f%aI%x1f%cI%x1f%P%x1e', '-n', '200']).catch(() => ''),
     git(root, ['branch', '--show-current']).catch(() => ''),
   ]);
   const status = new Map();
-  for (const record of rawStatus.split('\0').filter(Boolean)) status.set(record.slice(3).replaceAll('\\', '/'), record.slice(0, 2).trim() || '?');
-  const commits = rawCommits.split(/\r?\n/).filter(Boolean).map(line => {
-    const [hash, subject, date] = line.split('\0'); return { hash, subject, date };
+  for (const record of rawStatus.split('\0').filter(Boolean)) {
+    const pair = record.slice(0, 2);
+    status.set(record.slice(3).replaceAll('\\', '/'), { status: pair.trim() || '?', indexStatus: pair[0]?.trim() || '', worktreeStatus: pair[1]?.trim() || '' });
+  }
+  const commits = rawCommits.split('\x1e').filter(Boolean).map(record => {
+    const [hash, subject, author, authorEmail, authorDate, commitDate, parents] = record.trim().split('\x1f');
+    return { hash, subject, author, authorEmail, authorDate, commitDate, date: commitDate, parents: (parents || '').split(' ').filter(Boolean) };
   }).filter(commit => /^[a-f0-9]{40,64}$/.test(commit.hash));
   return { ...buildBoard({ files: rawFiles.split('\0').filter(Boolean), status, commits, root }), hasGit: true, branch: branch.trim() };
 }
@@ -94,4 +99,44 @@ async function contextForCard(vscode, board, card) {
   return boardContext(card);
 }
 
-module.exports = { buildBoard, boardContext, loadBoard, contextForCard };
+async function detailForCard(vscode, board, card) {
+  if (!card) return undefined;
+  const result = { kind: card.kind, title: card.title, path: card.path || '', hash: card.hash || '', status: card.status || '', indexStatus: card.indexStatus || '', worktreeStatus: card.worktreeStatus || '', date: card.date || '', author: card.author || '', authorEmail: card.authorEmail || '' };
+  if (card.kind === 'area') {
+    result.members = board.files.filter(file => file.path.startsWith(`${card.path}/`)).map(file => ({ path: file.path, status: file.status || '' }));
+    result.fileCount = card.fileCount; return result;
+  }
+  if (['commit', 'feature'].includes(card.kind) && board.hasGit && /^[a-f0-9]{40,64}$/.test(card.hash)) {
+    const [metadata, names, numstats, history] = await Promise.all([
+      git(board.root, ['show', '-s', '--format=%H%x1f%s%x1f%an%x1f%ae%x1f%aI%x1f%cI%x1f%P', card.hash]),
+      git(board.root, ['diff-tree', '--no-commit-id', '--name-status', '-r', '--root', card.hash]),
+      git(board.root, ['show', '--format=', '--no-renames', '--numstat', card.hash]),
+      git(board.root, ['log', '--all', '--format=%h %s · %an · %cI', '--max-count=12', card.hash]).catch(() => ''),
+    ]);
+    const [hash, subject, author, authorEmail, authorDate, commitDate, parents] = metadata.trim().split('\x1f');
+    result.hash = hash; result.title = card.kind === 'feature' ? card.title : subject; result.author = author; result.authorEmail = authorEmail;
+    result.authorDate = authorDate; result.commitDate = commitDate; result.parents = (parents || '').split(' ').filter(Boolean);
+    const stats = new Map(numstats.trim().split(/\r?\n/).filter(Boolean).map(line => { const [additions, deletions, file] = line.split('\t'); return [file, { additions: additions === '-' ? null : Number(additions), deletions: deletions === '-' ? null : Number(deletions) }]; }));
+    result.changedFiles = names.trim().split(/\r?\n/).filter(Boolean).map(line => { const [status, ...parts] = line.split('\t'); const file = parts.at(-1) || ''; return { status, path: file, ...(stats.get(file) || {}) }; });
+    result.stats = { files: result.changedFiles.length, additions: [...stats.values()].reduce((total, value) => total + (value.additions || 0), 0), deletions: [...stats.values()].reduce((total, value) => total + (value.deletions || 0), 0) };
+    result.history = history.trim().split(/\r?\n/).filter(Boolean);
+    result.patch = (await git(board.root, ['show', '--format=', '--no-ext-diff', '--no-renames', '--no-color', '--patch', '--stat', card.hash]).catch(() => '')).slice(0, 30000);
+    if (card.kind === 'feature') result.sourceCommit = { hash, subject, author, authorDate, commitDate };
+    return result;
+  }
+  if (card.kind === 'file' || card.kind === 'change') {
+    result.language = path.extname(card.path).replace(/^\./, '').toUpperCase() || 'File';
+    if (board.hasGit) {
+      result.history = (await git(board.root, ['log', '--all', '--format=%h %s · %an · %cI', '--max-count=12', '--', card.path]).catch(() => '')).trim().split(/\r?\n/).filter(Boolean);
+      if (card.kind === 'change') {
+        const unstaged = await git(board.root, ['diff', '--no-ext-diff', '--no-color', '--', card.path]).catch(() => '');
+        const staged = await git(board.root, ['diff', '--cached', '--no-ext-diff', '--no-color', '--', card.path]).catch(() => '');
+        result.patch = (staged + (staged && unstaged ? '\n' : '') + unstaged).slice(0, 30000);
+      }
+    }
+    return result;
+  }
+  return result;
+}
+
+module.exports = { buildBoard, boardContext, loadBoard, contextForCard, detailForCard };

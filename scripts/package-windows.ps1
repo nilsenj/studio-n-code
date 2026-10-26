@@ -47,8 +47,9 @@ try {
     if (-not (Test-Path -LiteralPath $compiler)) { throw 'The upstream Inno Setup compiler is missing.' }
     & $compiler (Join-Path $projectRoot 'packaging/windows/studio-n-code.iss') "/DAppVersion=$version" "/DAppSource=$application" "/DReleaseOutput=$releaseRoot"
     if ($LASTEXITCODE -ne 0) { throw 'Windows installer compilation failed.' }
-    $assets = @($archive, (Join-Path $releaseRoot "studio-n-code-$version-windows-x64-setup.exe"))
-    $checksums = $assets | ForEach-Object { $digest = Get-FileHash -LiteralPath $_ -Algorithm SHA256; "$($digest.Hash.ToLower())  $([IO.Path]::GetFileName($_))" }
-    $checksums | Set-Content -LiteralPath (Join-Path $releaseRoot 'SHA256SUMS.txt') -Encoding ascii
+    $archiveName = "studio-n-code-$version-windows-x64.zip"
+    $setupName = "studio-n-code-$version-windows-x64-setup.exe"
+    & node scripts/write-checksums.mjs $releaseRoot $archiveName $setupName
+    if ($LASTEXITCODE -ne 0) { throw 'Release checksum generation failed.' }
     Write-Output "Release files created in $releaseRoot"
 } finally { Pop-Location }

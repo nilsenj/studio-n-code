@@ -170,7 +170,7 @@ async function run() {
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     try {
       const api = vscode.extensions.getExtension('studio-n-code.studio-workbench').exports.boardAI;
-      await api.configure({ endpoint: `http://127.0.0.1:${server.address().port}/v1`, model: 'test-local' });
+      await api.configure({ endpoint: `http://127.0.0.1:${server.address().port}/v1`, model: 'test-local', key: 'smoke-test-only' });
       const answer = await api.ask({ mode: 'explain', prompt: 'Explain the current file.' });
       assert.equal(answer.response, 'The file exports greet.');
       assert.match(received.messages.at(-1).content, /export function greet/);

@@ -26,6 +26,7 @@ await writeFile(entry, patchWorkbench(await readFile(entry, 'utf8')));
 const settings = join(upstream, 'src/vs/workbench/browser/workbench.contribution.ts');
 await writeFile(settings, patchMenuDefault(await readFile(settings, 'utf8')));
 for (const [kind, file] of Object.entries({
+  brokenpipe: 'src/bootstrap-node.ts',
   copilotignore: 'build/.moduleignore',
   copilotpackage: 'build/lib/extensions.ts',
   openvsxsignature: 'src/vs/workbench/contrib/extensions/browser/extensions.contribution.ts',

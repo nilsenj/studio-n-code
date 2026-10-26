@@ -44,6 +44,13 @@ export function patchMenuDefault(source) {
 }
 
 export function patchShell(kind, source) {
+  if (kind === 'brokenpipe') {
+    const marker = '// studio-n-code: ignore closed console pipes in GUI-launched Electron processes';
+    if (source.includes(marker)) return source;
+    const anchor = 'Error.stackTraceLimit = 100;';
+    if (!source.includes(anchor)) throw new Error('Bootstrap stack-trace anchor was not found');
+    return source.replace(anchor, `${anchor}\n\n${marker}\nconst handleConsolePipeError = (error: NodeJS.ErrnoException): void => {\n\tif (error.code !== 'EPIPE') {\n\t\tthrow error;\n\t}\n};\nprocess.stdout.on('error', handleConsolePipeError);\nprocess.stderr.on('error', handleConsolePipeError);`);
+  }
   if (kind === 'openvsxcli') {
     const anchor = 'verifySignature = isBoolean(value) ? value : true;';
     const replacement = "verifySignature = isBoolean(value) ? value : !this.productService.extensionsGallery?.serviceUrl?.startsWith('https://open-vsx.org/'); // Open VSX has no Microsoft gallery signatures";

@@ -11,8 +11,8 @@ A desktop coding studio by Studio N, with a focused workspace, integrated Git to
 - Studio N identity: Geist typography, charcoal surfaces, pill controls and pastel accents.
 - Project, branch and run controls, tool-window rails and integrated terminal/debugger.
 - Search across files, workspace symbols and actions; 61 mapped commands.
-- Git-backed Code Board for files, areas, changes, features and history, with an Explain action on each card.
-- AI Mode for questions, explanations, plans and reviewed single-file edits through a configured model.
+- Git-backed Code Board for files, areas, changes, features and history. Every card opens detailed Git/file metadata and includes AI Explain.
+- AI Mode for OpenAI, Google Gemini and Anthropic, with automatic model discovery, a balanced recommendation, separate OS-stored API keys, questions, plans and diff-reviewed single-file edits.
 - Visible command feedback, including missing providers, errors and cancellation.
 - Git commit checklist, branches, history graph, commit details and diffs.
 - Open VSX extension search/install and compatible VSIX files.

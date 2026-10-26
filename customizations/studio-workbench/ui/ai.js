@@ -1,7 +1,7 @@
 (() => {
   const vscode = acquireVsCodeApi();
   const $ = selector => document.querySelector(selector);
-  let mode = 'ask', active = null, busy = false, configured = false;
+  let mode = 'ask', active = null, busy = false, configured = false, models = [];
   const send = (type, more = {}) => vscode.postMessage({ type, ...more });
   function status(text, error = false) { $('#status').textContent = text; $('#status').classList.toggle('error',error); }
   function bubble(role, value = '') {
@@ -30,12 +30,16 @@
   $('#active-file').onclick=()=>send('useActiveFile');
   $('#settings-toggle').onclick=()=>{$('#settings').hidden=!$('#settings').hidden};
   $('#settings-close').onclick=()=>{$('#settings').hidden=true};
-  $('#save-settings').onclick=()=>send('saveSettings',{endpoint:$('#endpoint').value,model:$('#model').value,key:$('#key').value});
-  $('#clear-key').onclick=()=>send('clearKey');
+  $('#provider').onchange=()=>{models=[];$('#model').replaceChildren(new Option('Discover models first',''));$('#model').disabled=true;$('#key').value='';send('loadProvider',{provider:$('#provider').value});};
+  $('#discover-models').onclick=()=>{status('Discovering provider models…');send('discoverModels',{provider:$('#provider').value,key:$('#key').value});};
+  $('#key').onchange=()=>{if($('#key').value.trim()){status('Discovering provider models…');send('discoverModels',{provider:$('#provider').value,key:$('#key').value});}};
+  $('#save-settings').onclick=()=>send('saveSettings',{provider:$('#provider').value,model:$('#model').value,key:$('#key').value});
+  $('#clear-key').onclick=()=>send('clearKey',{provider:$('#provider').value});
   $('#preview-edit').onclick=()=>send('previewEdit'); $('#apply-edit').onclick=()=>send('applyEdit');
   window.addEventListener('message',event=>{
     const message=event.data;
-    if(message.type==='settings'){configured=!!message.model;$('#endpoint').value=message.endpoint||'';$('#model').value=message.model||'';$('#key').value='';$('#key-status').textContent=message.hasKey?'Key saved':'No key saved';status(message.model?'Ready to ask.':'Connect a model to begin.');}
+    if(message.type==='settings'){configured=!!message.model;$('#provider').value=message.provider||'openai';$('#key').value='';$('#key-status').textContent=message.hasKey?'Key saved':'No key saved';if(message.model){models=[{id:message.model,label:message.model}];fillModels(message.model);}else{models=[];$('#model').replaceChildren(new Option('Discover models first',''));$('#model').disabled=true;}status(message.model?'Ready to ask.':'Connect a provider and discover models to begin.');if(message.hasKey){status('Discovering saved provider models…');send('discoverModels',{provider:message.provider||'openai',key:''});}}
+    if(message.type==='models'){models=message.options||[];fillModels(message.recommended);const recommended=models.find(item=>item.id===message.recommended);$('#model-note').textContent=recommended?`Balanced recommendation: ${recommended.label}. Choose any discovered model.`:'Choose any model returned by this provider.';status(`${models.length} models discovered.`);}
     if(message.type==='context'){$('#context').textContent=message.label||'No board item selected. Your active file will be used when available.';if(message.explain){setMode('explain');$('#prompt').value='Explain this clearly: its purpose, flow, dependencies and risks.';if(configured)$('#send').click();else $('#settings').hidden=false;}}
     if(message.type==='delta'&&active){active.textContent+=message.text;active.parentElement.scrollIntoView({block:'end'});}
     if(message.type==='done'){setBusy(false);status(message.message||'Completed.');if(message.edit){$('#preview-edit').hidden=false;$('#apply-edit').hidden=false;}active=null;}
@@ -44,5 +48,6 @@
     if(message.type==='applied'){$('#apply-edit').hidden=true;$('#preview-edit').hidden=true;status('Edit applied. Review and save the file.');}
     if(message.type==='cleared'){setBusy(false);active=null;}
   });
+  function fillModels(selected){const select=$('#model');select.replaceChildren();for(const item of models){const option=new Option(item.label+(item.recommended?' · Balanced':''),item.id);option.title=item.description||item.id;select.add(option);}select.disabled=!models.length;if(selected&&models.some(item=>item.id===selected))select.value=selected;}
   send('ready');
 })();
