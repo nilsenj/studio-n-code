@@ -8,6 +8,8 @@ Double Shift opens Search Everywhere across filenames, workspace symbols and app
 
 ## Editing and formatting
 
+Code Board and AI Mode are available in the main toolbar and left rail. See [their guide](ai-board.md) for Git-backed cards, explanations, model setup and diff-reviewed edits. Commands show their running state and outcome in the toolbar/status bar; **Output > studio-n-code** keeps details.
+
 - Ctrl+Alt+L reformats the document using the available formatter.
 - Select lines and press Ctrl+Alt+I to reindent them.
 - Ctrl+D duplicates a line or selection; Ctrl+Y deletes the line.
@@ -46,8 +48,8 @@ Current JavaScript/TypeScript files use the Node debugger when no named launch c
 
 ## Settings, extensions and data
 
-Ctrl+Alt+S opens settings. Compatible extensions can be installed from local VSIX files; availability and licensing depend on the extension. No extension marketplace publishing is performed by this project's build or release scripts.
+Ctrl+Alt+S opens settings. Search and install compatible extensions through Open VSX or install an author-provided VSIX. See [extension compatibility](extensions.md) for limitations. This project's release scripts do not publish extensions to a marketplace.
 
-Settings and installed extensions are kept under `.runtime/studio-n-code/`; shared application state uses the independently named home directory described in [BUILDING.md](../BUILDING.md).
+The installed app stores settings and extensions in its per-user profile. Development launchers use `.runtime/studio-n-code/` as described in [BUILDING.md](../BUILDING.md).
 
 The Restore Tool Window Layout action resets the application's initial project/tool-window arrangement. It does not erase files or Git history.

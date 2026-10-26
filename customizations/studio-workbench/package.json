@@ -18,6 +18,16 @@
     "onStartupFinished"
   ],
   "contributes": {
+    "configuration": {
+      "title": "studio-n-code",
+      "properties": {
+        "studio.commandFeedback": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show command progress and results in the interface and status bar."
+        }
+      }
+    },
     "commands": [
       {
         "command": "studio.searchEverywhere",
@@ -315,6 +325,16 @@
         "category": "Studio"
       },
       {
+        "command": "studio.codeBoard",
+        "title": "Code Board",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.aiMode",
+        "title": "AI Mode",
+        "category": "Studio"
+      },
+      {
         "command": "studio.restoreLayout",
         "title": "Restore Tool Window Layout",
         "category": "Studio"
@@ -332,22 +352,22 @@
       {
         "command": "studio.goToDefinition",
         "key": "ctrl+b",
-        "when": "editorTextFocus && editorHasDefinitionProvider"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.findUsages",
         "key": "alt+f7",
-        "when": "editorTextFocus && editorHasReferenceProvider"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.rename",
         "key": "shift+f6",
-        "when": "editorTextFocus && editorHasRenameProvider"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.format",
         "key": "ctrl+alt+l",
-        "when": "editorTextFocus && editorHasDocumentFormattingProvider"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.findInFiles",
@@ -442,17 +462,17 @@
       {
         "command": "studio.duplicate",
         "key": "ctrl+d",
-        "when": "editorTextFocus && !editorReadonly"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.deleteLine",
         "key": "ctrl+y",
-        "when": "editorTextFocus && !editorReadonly"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.joinLines",
         "key": "ctrl+shift+j",
-        "when": "editorTextFocus && !editorReadonly"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.expandSelection",
@@ -467,37 +487,37 @@
       {
         "command": "studio.quickFix",
         "key": "alt+enter",
-        "when": "editorTextFocus && !editorReadonly"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.organizeImports",
         "key": "ctrl+alt+o",
-        "when": "editorTextFocus && !editorReadonly"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.indent",
         "key": "ctrl+alt+i",
-        "when": "editorTextFocus && !editorReadonly"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.lineComment",
         "key": "ctrl+/",
-        "when": "editorTextFocus && !editorReadonly"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.blockComment",
         "key": "ctrl+shift+/",
-        "when": "editorTextFocus && !editorReadonly"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.moveLineUp",
         "key": "alt+shift+up",
-        "when": "editorTextFocus && !editorReadonly"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.moveLineDown",
         "key": "alt+shift+down",
-        "when": "editorTextFocus && !editorReadonly"
+        "when": "editorTextFocus"
       },
       {
         "command": "studio.closeTab",

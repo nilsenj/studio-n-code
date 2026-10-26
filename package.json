@@ -1,6 +1,6 @@
 {
   "name": "studio-n-code",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "A desktop coding studio with integrated Git tools and a focused editing workflow",
   "type": "module",
@@ -11,6 +11,7 @@
     "check:release": "node scripts/check-release.mjs",
     "prepare:upstream": "node scripts/prepare.mjs",
     "build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1",
+    "dist:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-windows.ps1",
     "start": "node scripts/launch.mjs",
     "smoke": "node scripts/launch.mjs --smoke"
   },

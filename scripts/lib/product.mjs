@@ -13,7 +13,12 @@ export function configureProduct(product) {
     serverApplicationName: 'studio-server', serverDataFolderName: '.studio-server', tunnelApplicationName: 'studio-tunnel',
     darwinBundleIdentifier: 'dev.studioncode.editor', linuxDesktopName: 'dev.studioncode.editor', linuxIconName: 'studio-n-code',
     urlProtocol: 'studio-n-code',
-    // No Microsoft Marketplace endpoint is added to this independently branded fork.
+    extensionsGallery: {
+      serviceUrl: 'https://open-vsx.org/vscode/gallery',
+      itemUrl: 'https://open-vsx.org/vscode/item',
+      resourceUrlTemplate: 'https://open-vsx.org/vscode/unpkg/{publisher}/{name}/{version}/{path}',
+      extensionUrlTemplate: 'https://open-vsx.org/vscode/gallery/{publisher}/{name}/latest',
+    },
     enableTelemetry: false,
   };
 }
@@ -39,8 +44,41 @@ export function patchMenuDefault(source) {
 }
 
 export function patchShell(kind, source) {
+  if (kind === 'openvsxcli') {
+    const anchor = 'verifySignature = isBoolean(value) ? value : true;';
+    const replacement = "verifySignature = isBoolean(value) ? value : !this.productService.extensionsGallery?.serviceUrl?.startsWith('https://open-vsx.org/'); // Open VSX has no Microsoft gallery signatures";
+    if (source.includes(replacement)) return source;
+    if (!source.includes(anchor)) throw new Error('CLI extension signature anchor was not found');
+    return source.replace(anchor, replacement);
+  }
+  if (kind === 'openvsxsignature') {
+    const replacement = "default: product.extensionsGallery?.serviceUrl?.startsWith('https://open-vsx.org/') ? false : true, // Open VSX packages do not carry Microsoft gallery signatures";
+    if (source.includes(replacement)) return source;
+    const anchor = /\[VerifyExtensionSignatureConfigKey\]: \{[\s\S]*?\bdefault: true,/;
+    if (!anchor.test(source)) throw new Error('Extension signature setting anchor was not found');
+    return source.replace(anchor, block => block.replace('default: true,', replacement));
+  }
+  if (kind === 'copilotpackage') {
+    const marker = '// studio-n-code: include the SDK, but no foreign-platform Copilot native modules';
+    if (source.includes(marker)) return source;
+    const start = source.indexOf('export function packageCopilotExtensionStream');
+    const end = source.indexOf('export function packageMarketplaceExtensionsStream', start);
+    if (start < 0 || end < 0) throw new Error('Copilot extension packaging anchors were not found');
+    const original = source.slice(start, end);
+    const anchor = ').pipe(util2.setExecutableBit([\'**/*.sh\']));';
+    if (!original.includes(anchor)) throw new Error('Copilot extension stream anchor was not found');
+    const replacement = `).pipe(filter(file => {\n\t\t${marker}\n\t\tconst name = file.path.replaceAll('\\\\', '/');\n\t\tconst copilot = '/node_modules/@github/copilot/';\n\t\treturn !name.includes(copilot) || name.includes(copilot + 'sdk/') || name.endsWith(copilot + 'package.json');\n\t})).pipe(util2.setExecutableBit(['**/*.sh']));`;
+    return source.slice(0, start) + original.replace(anchor, replacement) + source.slice(end);
+  }
+  if (kind === 'copilotignore') {
+    const marker = '# studio-n-code: preserve the built-in extension SDK required by the packaging shim';
+    if (source.includes(marker)) return source;
+    if (!/^@github\/copilot\/\*\*$/m.test(source.replaceAll('\r', ''))) throw new Error('Copilot packaging ignore anchor was not found');
+    return source.replace(/^@github\/copilot\/\*\*\r?$/m, `${marker}\n@github/copilot/**\n!@github/copilot/package.json\n!@github/copilot/sdk/**`);
+  }
   if (kind === 'titlebar') source = source.replace('let value = 48; // Studio New UI header', 'let value = this.isCommandCenterVisible || wcoEnabled ? DEFAULT_CUSTOM_TITLEBAR_HEIGHT : 30;');
   const replacements = {
+    bundler: ["'.ttf': 'file',", "'.ttf': 'file',\n\t\t\t\t'.woff2': 'file',"],
     layout: ['this.workbenchGrid.layout(this._mainContainerDimension.width, this._mainContainerDimension.height);', 'this.workbenchGrid.layout(Math.max(0, this._mainContainerDimension.width - 40), this._mainContainerDimension.height); // Studio right tool-window rail'],
     titlebar: ['let value = this.isCommandCenterVisible || wcoEnabled ? DEFAULT_CUSTOM_TITLEBAR_HEIGHT : 30;', 'let value = Math.max(48, DEFAULT_CUSTOM_TITLEBAR_HEIGHT); // Studio New UI header'],
     activitybar: ['static readonly ACTIVITYBAR_WIDTH = 48;', 'static readonly ACTIVITYBAR_WIDTH = 40; // Studio tool-window rail'],

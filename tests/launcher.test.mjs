@@ -13,3 +13,12 @@ test('desktop launch uses file output instead of a console pipe and preserves pa
   assert.ok(config.args.includes('--user-data-dir'));
   assert.ok(config.args.includes('--extensions-dir'));
 });
+
+test('packaged app launch does not depend on the development checkout or environment', () => {
+  const config = launchConfiguration('C:/Sources', ['C:/Projects/App'], { VSCODE_DEV: '1', NODE_ENV: 'development' }, true, 'C:/Installed/studio-n-code.exe');
+  assert.equal(config.env.VSCODE_DEV, undefined);
+  assert.equal(config.env.NODE_ENV, 'production');
+  assert.equal(config.executable, 'C:/Installed/studio-n-code.exe');
+  assert.equal(config.args.includes('.'), false);
+  assert.ok(!config.cwd.includes('upstream'));
+});

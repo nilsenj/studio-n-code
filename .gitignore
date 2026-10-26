@@ -14,3 +14,4 @@ artifacts/
 dist/
 coverage/
 *.lnk
+/VSCode-win32-*/

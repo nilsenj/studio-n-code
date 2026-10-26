@@ -20,28 +20,28 @@
     "id": "studio.goToDefinition",
     "title": "Go to Declaration or Definition",
     "key": "ctrl+b",
-    "when": "editorTextFocus && editorHasDefinitionProvider",
+    "when": "editorTextFocus",
     "target": "editor.action.revealDefinition"
   },
   {
     "id": "studio.findUsages",
     "title": "Find Usages",
     "key": "alt+f7",
-    "when": "editorTextFocus && editorHasReferenceProvider",
+    "when": "editorTextFocus",
     "target": "editor.action.referenceSearch.trigger"
   },
   {
     "id": "studio.rename",
     "title": "Rename",
     "key": "shift+f6",
-    "when": "editorTextFocus && editorHasRenameProvider",
+    "when": "editorTextFocus",
     "target": "editor.action.rename"
   },
   {
     "id": "studio.format",
     "title": "Reformat Code",
     "key": "ctrl+alt+l",
-    "when": "editorTextFocus && editorHasDocumentFormattingProvider",
+    "when": "editorTextFocus",
     "target": "editor.action.formatDocument"
   },
   {
@@ -188,21 +188,21 @@
     "title": "Duplicate Line or Selection",
     "key": "ctrl+d",
     "target": "editor.action.copyLinesDownAction",
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus"
   },
   {
     "id": "studio.deleteLine",
     "title": "Delete Line",
     "key": "ctrl+y",
     "target": "editor.action.deleteLines",
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus"
   },
   {
     "id": "studio.joinLines",
     "title": "Join Lines",
     "key": "ctrl+shift+j",
     "target": "editor.action.joinLines",
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus"
   },
   {
     "id": "studio.expandSelection",
@@ -223,49 +223,49 @@
     "title": "Show Intention Actions",
     "key": "alt+enter",
     "target": "editor.action.quickFix",
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus"
   },
   {
     "id": "studio.organizeImports",
     "title": "Optimize Imports",
     "key": "ctrl+alt+o",
     "target": "editor.action.organizeImports",
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus"
   },
   {
     "id": "studio.indent",
     "title": "Auto-Indent Lines",
     "key": "ctrl+alt+i",
     "target": "editor.action.reindentselectedlines",
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus"
   },
   {
     "id": "studio.lineComment",
     "title": "Comment with Line Comment",
     "key": "ctrl+/",
     "target": "editor.action.commentLine",
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus"
   },
   {
     "id": "studio.blockComment",
     "title": "Comment with Block Comment",
     "key": "ctrl+shift+/",
     "target": "editor.action.blockComment",
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus"
   },
   {
     "id": "studio.moveLineUp",
     "title": "Move Line Up",
     "key": "alt+shift+up",
     "target": "editor.action.moveLinesUpAction",
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus"
   },
   {
     "id": "studio.moveLineDown",
     "title": "Move Line Down",
     "key": "alt+shift+down",
     "target": "editor.action.moveLinesDownAction",
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus"
   },
   {
     "id": "studio.closeTab",
@@ -371,5 +371,15 @@
     "title": "Go to Symbol",
     "key": "ctrl+alt+shift+n",
     "target": "workbench.action.showAllSymbols"
+  },
+  {
+    "id": "studio.codeBoard",
+    "title": "Code Board",
+    "handler": "codeBoard"
+  },
+  {
+    "id": "studio.aiMode",
+    "title": "AI Mode",
+    "handler": "aiMode"
   }
 ]

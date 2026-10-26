@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const files = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
-const forbidden = /^(?:upstream|node_modules|\.runtime|\.logs|\.private|artifacts|\.aws|\.codex|\.agents)\//;
+const forbidden = /^(?:upstream|node_modules|\.runtime|\.logs|\.private|artifacts|\.aws|\.codex|\.agents|dist|VSCode-win32-[^/]+)\//;
 const privatePath = /[A-Z]:[\\/]Users[\\/][^\s"'`]+/i;
 const errors = [];
 for (const file of files) {

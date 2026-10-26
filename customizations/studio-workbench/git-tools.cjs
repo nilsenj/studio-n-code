@@ -92,7 +92,9 @@ function registerGitTools(vscode, context, report) {
       const selected = validateCommitSelection(files, selection?.paths, selection?.message);
       await repo.add(selected);
       await repo.commit(selection.message.trim(), { all: false, amend: selection.amend === true, requireUserConfig: true, postCommitCommand: null });
-      for (const view of views) void view.webview.postMessage({ type: 'committed' });
+      const latest = (await repo.log({ maxEntries: 1 }))[0];
+      for (const view of views) void view.webview.postMessage({ type: 'committed', hash: latest?.hash?.slice(0, 8), files: selected.length });
+      vscode.window.setStatusBarMessage(`$(check) Committed ${selected.length} file${selected.length === 1 ? '' : 's'} · ${latest?.hash?.slice(0, 8) || ''}`, 6000);
       await repo.status();
       await refresh();
     } finally { operation = false; }
@@ -200,6 +202,7 @@ function registerGitTools(vscode, context, report) {
       ...branches.map(branch => ({ label: `$(git-branch) ${branch.name}`, description: branch.name === repo.state.HEAD?.name ? 'Current' : branch.type === 1 ? 'Remote' : 'Local', branch: branch.name })),
     ];
     const choice = await vscode.window.showQuickPick(entries, { title: repo.state.HEAD?.name || 'Git', placeHolder: 'Branches and VCS actions' });
+    if (!choice) return false;
     if (choice?.command) return vscode.commands.executeCommand(choice.command, repo.rootUri);
     if (choice?.branch && choice.branch !== repo.state.HEAD?.name) { await repo.checkout(choice.branch); await refresh(); }
   }

@@ -5,12 +5,15 @@ import { resolve, join } from 'node:path';
 import { launchConfiguration } from './lib/launcher.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const smoke = process.argv[2] === '--smoke';
+const smoke = process.argv.includes('--smoke');
+const packagedIndex = process.argv.indexOf('--packaged-executable');
+if (packagedIndex >= 0 && !process.argv[packagedIndex + 1]) throw new Error('--packaged-executable requires an executable path.');
+const packagedExecutable = packagedIndex >= 0 ? resolve(process.argv[packagedIndex + 1]) : undefined;
 if (smoke) { process.chdir(root); await import('./create-fixture.mjs'); }
 const paths = smoke ? [readFileSync(join(root, 'artifacts/fixture-path.txt'), 'utf8').trim()]
-  : process.argv.slice(2).map(path => resolve(path));
-const config = launchConfiguration(root, paths, process.env, smoke);
-if (!existsSync(config.executable) || !existsSync(join(config.cwd, 'out/main.js'))) {
+  : process.argv.slice(2).filter((_value, index) => packagedIndex < 0 || index + 2 !== packagedIndex && index + 2 !== packagedIndex + 1).map(path => resolve(path));
+const config = launchConfiguration(root, paths, process.env, smoke, packagedExecutable);
+if (!existsSync(config.executable) || !packagedExecutable && !existsSync(join(config.cwd, 'out/main.js'))) {
   throw new Error('studio-n-code has not been built. See README.md for build instructions.');
 }
 mkdirSync(join(root, '.logs'), { recursive: true });

@@ -9,6 +9,11 @@ import { ICommandService, CommandsRegistry } from '../../../../platform/commands
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
+import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
+import { getCodeEditor } from '../../../../editor/browser/editorBrowser.js';
+import { EditorOption } from '../../../../editor/common/config/editorOptions.js';
+import { ILanguageFeaturesService } from '../../../../editor/common/services/languageFeatures.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IWorkbenchLayoutService, Parts } from '../../../services/layout/browser/layoutService.js';
 import { IViewsService } from '../../../services/views/common/viewsService.js';
 import { IViewDescriptorService, ViewContainerLocation } from '../../../common/views.js';
@@ -25,6 +30,9 @@ class StudioShell extends Disposable {
 		@IWorkspaceContextService workspace: IWorkspaceContextService,
 		@IViewsService views: IViewsService,
 		@IViewDescriptorService descriptors: IViewDescriptorService,
+		@IContextKeyService contextKeys: IContextKeyService,
+		@IEditorService editors: IEditorService,
+		@ILanguageFeaturesService languageFeatures: ILanguageFeaturesService,
 	) {
 		super();
 		const execute = (id: string, ...args: object[]) => commands.executeCommand(id, ...args).catch(error => notifications.error(error));
@@ -37,7 +45,7 @@ class StudioShell extends Disposable {
 				['Undo', 'undo'], ['Redo', 'redo'], ['Cut', 'editor.action.clipboardCutAction'], ['Copy', 'editor.action.clipboardCopyAction'], ['Paste', 'editor.action.clipboardPasteAction'], ['Find', 'actions.find'], ['Replace', 'studio.replace'], ['Find in Files…', 'studio.findInFiles'], ['Replace in Files…', 'studio.replaceInFiles'],
 			]),
 			submenu('view', localize('studio.menu.view', "View"), [
-				['Tool Windows…', 'studio.toolWindows'], ['Project', 'studio.project'], ['Commit', 'studio.commit'], ['Git', 'studio.git'], ['Terminal', 'studio.terminal'], ['Problems', 'studio.problems'], ['Structure', 'studio.structure'], ['Distraction Free Mode', 'workbench.action.toggleZenMode'], ['Full Screen', 'workbench.action.toggleFullScreen'],
+				['Tool Windows…', 'studio.toolWindows'], ['Project', 'studio.project'], ['Code Board', 'studio.codeBoard'], ['AI Mode', 'studio.aiMode'], ['Commit', 'studio.commit'], ['Git', 'studio.git'], ['Terminal', 'studio.terminal'], ['Problems', 'studio.problems'], ['Structure', 'studio.structure'], ['Distraction Free Mode', 'workbench.action.toggleZenMode'], ['Full Screen', 'workbench.action.toggleFullScreen'],
 			]),
 			submenu('navigate', localize('studio.menu.navigate', "Navigate"), [
 				['Search Everywhere', 'studio.searchEverywhere'], ['Class…', 'studio.goToClass'], ['File…', 'studio.goToFile'], ['File Structure', 'studio.fileStructure'], ['Declaration or Definition', 'studio.goToDefinition'], ['Find Usages', 'studio.findUsages'], ['Recent Files', 'studio.recentFiles'], ['Back', 'studio.back'], ['Forward', 'studio.forward'], ['Last Edit Location', 'studio.lastEdit'], ['Line…', 'studio.goToLine'],
@@ -52,7 +60,7 @@ class StudioShell extends Disposable {
 				['Run', 'studio.run'], ['Debug', 'studio.debug'], ['Stop', 'studio.stop'], ['Run/Debug Configurations…', 'studio.runConfigurations'], ['Resume Program', 'studio.resume'], ['Step Over', 'studio.stepOver'], ['Step Into', 'studio.stepInto'], ['Step Out', 'studio.stepOut'], ['Toggle Line Breakpoint', 'studio.breakpoint'],
 			]),
 			submenu('tools', localize('studio.menu.tools', "Tools"), [
-				['Terminal', 'studio.terminal'], ['Run Task…', 'workbench.action.tasks.runTask'], ['Plugins', 'workbench.view.extensions'], ['Find Action…', 'studio.findAction'],
+				['Code Board', 'studio.codeBoard'], ['AI Mode', 'studio.aiMode'], ['Terminal', 'studio.terminal'], ['Run Task…', 'workbench.action.tasks.runTask'], ['Plugins', 'workbench.view.extensions'], ['Find Action…', 'studio.findAction'],
 			]),
 			submenu('git', localize('studio.menu.git', "Git"), [
 				['Commit…', 'studio.commit'], ['Push…', 'studio.push'], ['Update Project…', 'studio.updateProject'], ['Branches…', 'studio.branches'], ['Show Git Log', 'studio.git'], ['Fetch', 'git.fetch'], ['Stash Changes…', 'git.stash'], ['Unstash Changes…', 'git.stashPop'],
@@ -65,6 +73,44 @@ class StudioShell extends Disposable {
 			]),
 		];
 		const own = (element: HTMLElement) => { this._register(toDisposable(() => element.remove())); return element; };
+		const feedback = own(append(layout.mainContainer, $('.studio-command-feedback')));
+		feedback.setAttribute('role', 'status');
+		feedback.setAttribute('aria-live', 'polite');
+		feedback.hidden = true;
+		let feedbackTimeout: ReturnType<typeof setTimeout> | undefined;
+		this._register(toDisposable(() => clearTimeout(feedbackTimeout)));
+		this._register(CommandsRegistry.registerCommand('studio.nativeActionFeedback', (_accessor, event: { id?: string; title?: string; message?: string; phase?: string; key?: string }) => {
+			if (!event || typeof event.title !== 'string' || typeof event.message !== 'string') { return; }
+			clearTimeout(feedbackTimeout);
+			feedback.hidden = false;
+			feedback.dataset.phase = event.phase;
+			feedback.replaceChildren();
+			append(feedback, $('strong', undefined, event.title.slice(0, 100)));
+			append(feedback, $('span', undefined, event.message.slice(0, 250)));
+			if (event.key) { append(feedback, $('kbd', undefined, event.key)); }
+			for (const button of layout.mainContainer.querySelectorAll<HTMLElement>('[data-studio-command]')) {
+				if (button.dataset.studioCommand === event.id) {
+					button.classList.toggle('command-running', event.phase === 'running');
+					button.setAttribute('aria-busy', String(event.phase === 'running'));
+				}
+			}
+			if (event.phase !== 'running') { feedbackTimeout = setTimeout(() => feedback.hidden = true, event.phase === 'error' || event.phase === 'unavailable' ? 7000 : 3200); }
+		}));
+		this._register(CommandsRegistry.registerCommand('studio.nativeCapabilities', () => {
+			const editor = getCodeEditor(editors.activeTextEditorControl);
+			const model = editor?.getModel();
+			if (editor && model) {
+				return { format: languageFeatures.documentFormattingEditProvider.has(model), rename: languageFeatures.renameProvider.has(model), definition: languageFeatures.definitionProvider.has(model), references: languageFeatures.referenceProvider.has(model), readonly: editor.getOption(EditorOption.readOnly) };
+			}
+			const context = contextKeys.getContext(mainWindow.document.activeElement);
+			return {
+				format: context.getValue<boolean>('editorHasDocumentFormattingProvider'),
+				rename: context.getValue<boolean>('editorHasRenameProvider'),
+				definition: context.getValue<boolean>('editorHasDefinitionProvider'),
+				references: context.getValue<boolean>('editorHasReferenceProvider'),
+				readonly: context.getValue<boolean>('editorReadonly'),
+			};
+		}));
 		const makeButton = (container: HTMLElement, icon: string, title: string, action: () => void, text?: string) => {
 			const button = append(container, $('button.studio-control'));
 			button.setAttribute('type', 'button');
@@ -85,6 +131,7 @@ class StudioShell extends Disposable {
 			});
 			const project = makeButton(header, '', localize('studio.project', "Open or Switch Project"), () => { void execute('studio.projects'); });
 			project.classList.add('studio-project-widget');
+			project.dataset.studioCommand = 'studio.projects';
 			const badge = append(project, $('span.studio-project-badge'));
 			const projectName = append(project, $('span.studio-label'));
 			append(project, $('span.codicon.codicon-chevron-down'));
@@ -97,14 +144,20 @@ class StudioShell extends Disposable {
 			this._register(workspace.onDidChangeWorkspaceFolders(updateProject));
 			const branch = makeButton(header, 'git-branch', localize('studio.vcs', "Branches and VCS Actions"), () => { void execute('studio.branches'); }, localize('studio.branch', "Git"));
 			branch.classList.add('studio-vcs-widget'); append(branch, $('span.codicon.codicon-chevron-down'));
+			branch.dataset.studioCommand = 'studio.branches';
 			append(header, $('.studio-header-spacer'));
 			const run = makeButton(header, '', localize('studio.configurations', "Run/Debug Configurations"), () => { void execute('studio.runConfigurations'); }, localize('studio.currentFile', "Current File"));
 			run.classList.add('studio-run-widget'); append(run, $('span.codicon.codicon-chevron-down'));
-			makeButton(header, 'play', localize('studio.run', "Run (Shift+F10)"), () => { void execute('studio.run'); }).classList.add('studio-run');
-			makeButton(header, 'debug-alt', localize('studio.debug', "Debug (Shift+F9)"), () => { void execute('studio.debug'); }).classList.add('studio-run');
-			makeButton(header, 'debug-stop', localize('studio.stop', "Stop (Ctrl+F2)"), () => { void execute('workbench.action.debug.stop'); });
+			run.dataset.studioCommand = 'studio.runConfigurations';
+			const runButton = makeButton(header, 'play', localize('studio.run', "Run (Shift+F10)"), () => { void execute('studio.run'); });
+			runButton.classList.add('studio-run'); runButton.dataset.studioCommand = 'studio.run';
+			const debugButton = makeButton(header, 'debug-alt', localize('studio.debug', "Debug (Shift+F9)"), () => { void execute('studio.debug'); });
+			debugButton.classList.add('studio-run'); debugButton.dataset.studioCommand = 'studio.debug';
+			makeButton(header, 'debug-stop', localize('studio.stop', "Stop (Ctrl+F2)"), () => { void execute('studio.stop'); }).dataset.studioCommand = 'studio.stop';
 			append(header, $('.studio-header-divider'));
 			makeButton(header, 'search', localize('studio.search', "Search Everywhere (Double Shift)"), () => { void execute('studio.searchEverywhere'); });
+			makeButton(header, 'layout', localize('studio.board', "Code Board"), () => { void execute('studio.codeBoard'); }, localize('studio.boardShort', "Board")).dataset.studioCommand = 'studio.codeBoard';
+			makeButton(header, 'sparkle', localize('studio.aiMode', "AI Mode"), () => { void execute('studio.aiMode'); }, localize('studio.aiShort', "AI")).dataset.studioCommand = 'studio.aiMode';
 			makeButton(header, 'settings-gear', localize('studio.settings', "Settings (Ctrl+Alt+S)"), () => { void execute('studio.settings'); });
 			this._register(CommandsRegistry.registerCommand('studio.nativeHeaderState', (_accessor, value: { branch?: string; project?: string; run?: string }) => {
 				if (typeof value?.branch === 'string') { branch.querySelector('.studio-label')!.textContent = value.branch.slice(0, 100); }
@@ -122,12 +175,15 @@ class StudioShell extends Disposable {
 				else if (containerId && views.isViewContainerVisible(containerId)) { views.closeViewContainer(containerId); }
 				else { void execute(command); }
 			});
+			button.dataset.studioCommand = command;
 			railItems.push({ button, view, container: containerId });
 		};
 		if (left) {
 			tool(left, 'folder', localize('studio.projectTool', "Project (Alt+1)"), 'studio.project', undefined, 'workbench.view.explorer');
 			tool(left, 'git-commit', localize('studio.commitTool', "Commit (Alt+0)"), 'studio.commit', 'studio.commitView');
 			tool(left, 'list-tree', localize('studio.structureTool', "Structure (Alt+7)"), 'studio.structure', 'outline');
+			tool(left, 'layout', localize('studio.boardTool', "Code Board"), 'studio.codeBoard');
+			tool(left, 'sparkle', localize('studio.aiTool', "AI Mode"), 'studio.aiMode');
 			append(left, $('.studio-rail-separator'));
 			tool(left, 'extensions', localize('studio.plugins', "Plugins"), 'workbench.view.extensions', undefined, 'workbench.view.extensions');
 			tool(left, 'ellipsis', localize('studio.tools', "More Tool Windows"), 'studio.toolWindows');

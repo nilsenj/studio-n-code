@@ -21,7 +21,7 @@ for (let index = 0; index < sizes.length; index++) {
   offset += pngs[index].length;
 }
 await writeFile(join(root, 'assets/icon.ico'), Buffer.concat([header, ...pngs]));
-for (const size of [256, 512, 1024]) {
+for (const size of [70, 150, 256, 512, 1024]) {
   const png = new Resvg(source, { fitTo: { mode: 'width', value: size } }).render().asPng();
   await writeFile(join(root, `assets/icon-${size}.png`), png);
 }

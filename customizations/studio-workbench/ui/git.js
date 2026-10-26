@@ -8,12 +8,13 @@
   let busy = false;
   const kind = document.body.dataset.kind;
   const app = document.getElementById('app');
-  const send = (type, extra = {}) => api.postMessage({ type, ...extra });
+  const send = (type, extra = {}) => { if (['commit','fetch','pull','push','refresh'].includes(type)) { success.hidden = true; showError(''); } api.postMessage({ type, ...extra }); };
   const persist = () => api.setState(state);
   function el(tag, cls, text) { const element = document.createElement(tag); if (cls) element.className = cls; if (text !== undefined) element.textContent = text; return element; }
   function button(text, title, action, cls = '') { const element = el('button', cls, text); element.title = title; element.setAttribute('aria-label', title); element.onclick = action; return element; }
   const error = el('div', 'error'); error.setAttribute('role', 'alert');
-  function showError(text) { error.textContent = text; error.classList.toggle('visible', !!text); }
+  const success = el('div', 'success'); success.setAttribute('role', 'status'); success.hidden = true;
+  function showError(text) { if (text) success.hidden = true; error.textContent = text; error.classList.toggle('visible', !!text); }
   function preserveInteraction(render) {
     const focused = document.activeElement;
     const key = focused?.dataset.focusKey;
@@ -42,6 +43,7 @@
     toolbar.append(button('↻', 'Refresh Changes', () => send('refresh')), button('↗', 'Open Git Log (Alt+9)', () => send('openLog')));
     repoSelector(toolbar); toolbar.append(el('span', 'spacer'), el('span', 'muted', snapshot?.branch || ''));
     layout.append(error);
+    layout.append(success);
     const scroll = el('div', 'changes-scroll'); layout.append(scroll);
     if (snapshot?.noRepository) { scroll.append(el('div', 'empty', 'Open a project with a Git repository to view its changes.')); return; }
     const files = snapshot?.changes || [];
@@ -83,6 +85,7 @@
     repoSelector(toolbar); toolbar.append(button('Branch ▾', 'Show Branches', () => send('branches')), el('span', 'spacer'),
       button('↻', 'Refresh Git Log', () => send('refresh')), button('↓', 'Fetch', () => send('fetch')), button('↙', 'Update Project', () => send('pull')), button('↑', 'Push', () => send('push')), el('span', 'log-count', `${snapshot?.commits.length || 0} commits`));
     layout.append(error);
+    layout.append(success);
     if (snapshot?.noRepository) { layout.append(el('div', 'empty', 'Open a Git repository to view its history.')); return; }
     const content = el('div', 'log-content'); const branches = el('aside', 'branches'); const history = el('section', 'history'); const detail = el('aside', 'details'); content.append(branches, history, detail); layout.append(content);
     branches.append(button('HEAD (Current)', 'Show Current Branch', () => send('filterBranch', { ref: '' }), `branch-row${!snapshot?.ref ? ' active' : ''}`));
@@ -134,9 +137,10 @@
 
   window.addEventListener('message', event => {
     const message = event.data;
+    if (message.type === 'committed') showError('');
     if (message.type === 'snapshot') { snapshot = message; if (kind === 'commit') renderCommit(); else renderLog(); }
     if (message.type === 'error') { busy = false; if (kind === 'commit') renderCommit(); showError(message.message); }
-    if (message.type === 'committed') { busy = false; state.message = ''; state.selected = []; state.initialized = false; state.amend = false; persist(); }
+    if (message.type === 'committed') { busy = false; state.message = ''; state.selected = []; state.initialized = false; state.amend = false; persist(); success.textContent = `✓ Committed ${message.files || 0} file${message.files === 1 ? '' : 's'}${message.hash ? ` · ${message.hash}` : ''}`; success.hidden = false; if (kind === 'commit') renderCommit(); }
     if (message.type === 'commitDetails') { details = message; const container = document.querySelector('.details'); if (container) renderDetails(container); }
   });
   if (kind === 'commit') renderCommit(); else renderLog();

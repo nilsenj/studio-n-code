@@ -12,6 +12,8 @@ const productPath = join(upstream, 'product.json');
 const product = JSON.parse(await readFile(productPath, 'utf8'));
 await writeFile(productPath, JSON.stringify(configureProduct(product), null, '\t') + '\n');
 await cp(join(root, 'assets/icon.ico'), join(upstream, 'resources/win32/code.ico'));
+await cp(join(root, 'assets/icon-70.png'), join(upstream, 'resources/win32/code_70x70.png'));
+await cp(join(root, 'assets/icon-150.png'), join(upstream, 'resources/win32/code_150x150.png'));
 await cp(join(root, 'assets/icon-256.png'), join(upstream, 'resources/linux/code.png'));
 await cp(join(root, 'assets/icon.svg'), join(upstream, 'src/vs/workbench/browser/media/code-icon.svg'));
 await cp(join(root, 'customizations/studio-workbench'), join(upstream, 'extensions/studio-workbench'), { recursive: true });
@@ -24,6 +26,11 @@ await writeFile(entry, patchWorkbench(await readFile(entry, 'utf8')));
 const settings = join(upstream, 'src/vs/workbench/browser/workbench.contribution.ts');
 await writeFile(settings, patchMenuDefault(await readFile(settings, 'utf8')));
 for (const [kind, file] of Object.entries({
+  copilotignore: 'build/.moduleignore',
+  copilotpackage: 'build/lib/extensions.ts',
+  openvsxsignature: 'src/vs/workbench/contrib/extensions/browser/extensions.contribution.ts',
+  openvsxcli: 'src/vs/platform/extensionManagement/node/extensionManagementService.ts',
+  bundler: 'build/next/index.ts',
   layout: 'src/vs/workbench/browser/layout.ts',
   titlebar: 'src/vs/workbench/browser/parts/titlebar/titlebarPart.ts',
   activitybar: 'src/vs/workbench/browser/parts/activitybar/activitybarPart.ts',

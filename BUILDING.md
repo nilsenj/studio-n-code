@@ -1,5 +1,9 @@
 # Building studio-n-code
 
+For normal installation use [INSTALL.md](INSTALL.md). These instructions are for source developers.
+
+To build the standalone Windows package, run `npm run dist:win` after installing the prerequisites below. It runs the upstream production pipeline, checks the packaged app in a disposable smoke-test profile, then produces an installer, portable ZIP and SHA-256 digests in `dist/`. The explicit `-DevelopmentWithoutSpectre` option can also be passed directly to `scripts/package-windows.ps1` for preview toolchains without Spectre libraries. Such packages must be described as previews using ordinary runtime libraries.
+
 ## Supported development environment
 
 The currently verified desktop environment is Windows x64 with:

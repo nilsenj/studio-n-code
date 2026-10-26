@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const cp = require('node:child_process');
+const http = require('node:http');
 const vscode = require('vscode');
 const actions = require('../../customizations/studio-workbench/commands.json');
 
@@ -28,7 +29,10 @@ async function run() {
     const extension = vscode.extensions.getExtension('studio-n-code.studio-workbench');
     assert.ok(extension, 'Studio bundled extension is missing');
     await extension.activate();
-    const commands = await vscode.commands.getCommands(true);
+    const commands = await until(async () => {
+      const available = await vscode.commands.getCommands(true);
+      return actions.every(action => available.includes(action.id) && (!action.target || available.includes(action.target))) ? available : undefined;
+    }, 'Studio native and extension commands');
     for (const action of actions) {
       assert.ok(commands.includes(action.id), `Missing Studio action ${action.id}`);
       if (action.target) assert.ok(commands.includes(action.target), `Missing target ${action.target}`);
@@ -132,6 +136,50 @@ async function run() {
     const details = await studio.exports.gitTools.commitDetails(log[0].hash);
     assert.deepEqual(details.files.map(change => change.path), [selected]);
     assert.ok(repo.state.workingTreeChanges.some(change => change.uri.fsPath === unselected));
+  });
+  await check('Commands return visible success and unavailable-provider feedback', async () => {
+    const document = await vscode.workspace.openTextDocument({ language: 'plaintext', content: 'feedback\n' });
+    const editor = await vscode.window.showTextDocument(document);
+    editor.selection = new vscode.Selection(0, 0, 0, 0);
+    const duplicate = await vscode.commands.executeCommand('studio.duplicate');
+    assert.equal(duplicate.phase, 'success');
+    assert.equal(document.getText(), 'feedback\nfeedback\n');
+    const format = await vscode.commands.executeCommand('studio.format');
+    assert.equal(format.phase, 'unavailable');
+    assert.match(format.message, /formatter/);
+    assert.ok(await vscode.commands.executeCommand('studio.nativeCapabilities'));
+  });
+  await check('Code Board loads Git files and AI Mode explains selected source through a local model endpoint', async () => {
+    const board = await vscode.commands.executeCommand('studio.codeBoard');
+    assert.equal(board.phase, 'success');
+    assert.ok(board.value.files >= 5);
+    const ai = await vscode.commands.executeCommand('studio.aiMode');
+    assert.equal(ai.phase, 'success');
+    const editor = await vscode.window.showTextDocument(vscode.Uri.file(path.join(root, 'src/main.ts')));
+    assert.match(editor.document.getText(), /export function greet/);
+    let received;
+    const server = http.createServer(async (request, response) => {
+      let body = ''; for await (const chunk of request) body += chunk;
+      received = JSON.parse(body);
+      response.writeHead(200, { 'content-type': 'text/event-stream' });
+      const answer = received.messages[0].content.includes('complete replacement')
+        ? "```ts\nexport function greet(name: string): string { return 'Hi ' + name; }\n```"
+        : 'The file exports greet.';
+      response.end(`data: ${JSON.stringify({ choices: [{ delta: { content: answer } }] })}\n\ndata: [DONE]\n\n`);
+    });
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    try {
+      const api = vscode.extensions.getExtension('studio-n-code.studio-workbench').exports.boardAI;
+      await api.configure({ endpoint: `http://127.0.0.1:${server.address().port}/v1`, model: 'test-local' });
+      const answer = await api.ask({ mode: 'explain', prompt: 'Explain the current file.' });
+      assert.equal(answer.response, 'The file exports greet.');
+      assert.match(received.messages.at(-1).content, /export function greet/);
+      const edit = await api.ask({ mode: 'edit', prompt: 'Change the greeting to Hi.' });
+      assert.equal(edit.proposed, true);
+      assert.match(editor.document.getText(), /Hello/);
+      await api.applyEdit();
+      assert.match(editor.document.getText(), /return 'Hi ' \+ name/);
+    } finally { server.close(); }
   });
   await fs.mkdir(path.dirname(report), { recursive: true });
   await fs.writeFile(report, JSON.stringify({ date: new Date().toISOString(), results }, null, 2));

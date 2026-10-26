@@ -3,6 +3,8 @@ const vscode = require('vscode');
 const actions = require('./commands.json');
 const { searchItems, runAction, initializeLayout } = require('./workflow.cjs');
 const { registerGitTools } = require('./git-tools.cjs');
+const { runCommand, createFeedback } = require('./command-feedback.cjs');
+const { registerBoardAI } = require('./board-ai.cjs');
 
 function activate(context) {
   const output = vscode.window.createOutputChannel('studio-n-code');
@@ -11,6 +13,7 @@ function activate(context) {
     output.appendLine(String(error?.stack || error));
     vscode.window.showErrorMessage(`studio-n-code: ${error.message || error}`);
   };
+  const feedback = createFeedback(vscode, context, output);
 
   async function searchEverywhere(mode = 'all') {
     const picker = vscode.window.createQuickPick();
@@ -67,6 +70,7 @@ function activate(context) {
   }
 
   const gitTools = registerGitTools(vscode, context, report);
+  const boardAI = registerBoardAI(vscode, context, report);
   let runConfiguration = context.workspaceState.get('studio.runConfiguration');
   async function chooseRunConfiguration() {
     const configurations = vscode.workspace.getConfiguration('launch').get('configurations', []);
@@ -75,7 +79,7 @@ function activate(context) {
       ...configurations.map(configuration => ({ label: configuration.name, configuration })),
       { label: 'Edit Configurations…', edit: true },
     ], { title: 'Run/Debug Configurations', placeHolder: 'Select a configuration' });
-    if (!choice) return;
+    if (!choice) return false;
     if (choice.edit) return vscode.commands.executeCommand('workbench.action.debug.configure');
     runConfiguration = choice.configuration?.name;
     await context.workspaceState.update('studio.runConfiguration', runConfiguration);
@@ -99,15 +103,17 @@ function activate(context) {
       { label: '$(close) Close Project', target: 'workbench.action.closeFolder' },
     ], { title: vscode.workspace.name || 'Projects' });
     if (selected) await vscode.commands.executeCommand(selected.target);
+    else return false;
   }
   async function toolWindows() {
     const selected = await vscode.window.showQuickPick(actions.filter(action => /Tool Window/.test(action.title)).map(action => ({ label: action.title.replace(' Tool Window', ''), command: action.id })), { title: 'Tool Windows' });
     if (selected) await vscode.commands.executeCommand(selected.command);
+    else return false;
   }
-  const handlers = { search: searchEverywhere, classes: () => searchEverywhere('classes'), branches: gitTools.vcsMenu, projects, runConfigurations: chooseRunConfiguration, run: () => runFile(true), debug: () => runFile(false), toolWindows };
+  const handlers = { search: searchEverywhere, classes: () => searchEverywhere('classes'), branches: gitTools.vcsMenu, projects, runConfigurations: chooseRunConfiguration, run: () => runFile(true), debug: () => runFile(false), toolWindows, codeBoard: boardAI.showBoard, aiMode: boardAI.showAI };
   for (const action of actions) {
     context.subscriptions.push(vscode.commands.registerCommand(action.id, () =>
-      (action.handler ? handlers[action.handler]() : vscode.commands.executeCommand(action.target)).catch(report)
+      runCommand(action, () => action.handler ? handlers[action.handler]() : vscode.commands.executeCommand(action.target), feedback)
     ));
   }
   context.subscriptions.push(vscode.commands.registerCommand('studio.restoreLayout', async () => {
@@ -116,7 +122,7 @@ function activate(context) {
   }));
   void initializeLayout(vscode, context.globalState).catch(report);
   void vscode.commands.executeCommand('studio.nativeHeaderState', { run: runConfiguration || 'Current File' }).then(undefined, () => {});
-  return { gitTools };
+  return { gitTools, boardAI };
 }
 
 module.exports = { activate };

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0 — 2026-10-26
+
+- Studio N agency identity: Geist, charcoal surfaces, pills, pastel accents and the N/red-dot icon.
+- Windows per-user installer and standalone portable packaging with checksums.
+- Command progress, missing-provider explanations, cancellation and honest outcome feedback.
+- Visible Git commit completion.
+- Open VSX extension search/install and compatible VSIX support.
+- Git-backed Code Board with Explain actions, plus AI Ask/Explain/Plan and reviewed single-file edits.
+- Installation, update, extension and design-system documentation.
+
 ## 0.1.0 — 2026-10-26
 
 Initial development release of studio-n-code.

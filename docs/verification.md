@@ -13,9 +13,10 @@ Local validation performed on 2026-10-26 for the studio-n-code development sourc
 
 | Check | Result |
 | --- | --- |
-| Root unit tests | 15 passed, 0 failed |
-| Headless Git-view interaction tests | 2 passed, 0 failed |
-| Real desktop smoke checks | 9 passed, 0 failed |
+| Root unit tests | 31 passed, 0 failed |
+| Headless webview interaction tests | 4 passed, 0 failed |
+| Packaged desktop smoke checks | 11 passed, 0 failed |
+| Fresh-profile Open VSX/VSIX installation | Prettier, EditorConfig, Dracula, and a local VSIX installed; Prettier and EditorConfig activated; Prettier formatted a real file |
 | Native incremental source build | Passed |
 | Whole-client TypeScript check | Passed |
 | SVG/PNG/ICO asset structure and sizes | Passed |
@@ -36,16 +37,18 @@ The suite runs in the real Electron extension host against a generated, disposab
 7. The Node debugger executes a real program and produces its checked output.
 8. Dedicated Commit/Git views open, expose real branch/history data and return the complete root-commit file list.
 9. A checklist commit includes only the selected file and preserves unrelated working changes.
+10. Command results and missing provider feedback are visible.
+11. Code Board reads Git files; AI Mode explains source and previews/applies a single-file edit using a local test model.
 
 The root-commit check asserts the complete original file set. Selected-commit changes are compared using an explicit parent-to-commit range; root commits use the read-only computed empty-tree ID.
 
 ## Interaction checks
 
-Headless Chromium executes the actual Git-view JavaScript. Background snapshots are checked to preserve the commit message's input focus/caret and the history filter's focus/query.
+Headless Chromium executes the actual Git and Code Board webview JavaScript. Background snapshots preserve the commit message's input focus/caret and the history filter's focus/query. Commit completion shows its file count/hash, and a subsequent error replaces the success message. Code Board search and Explain preserve the selected card ID.
 
 ## Scope of these results
 
-These are local development checks, not a claim of a signed or packaged release. The complete upstream test suite, installer behavior, other operating systems, external account integrations, advanced PHP intelligence and Xdebug were not validated. A screenshot-based desktop visual review was not performed.
+The package is an unsigned preview. The complete upstream test suite, other operating systems, external account integrations, advanced PHP intelligence and Xdebug were not validated. A screenshot-based desktop visual review was not performed; isolated Chromium previews of the actual webview assets were captured.
 
 This machine used the explicit local-development MSBuild override for ordinary runtime libraries because the matching Spectre libraries were absent. Standard release builds should use the full supported toolchain described in [BUILDING.md](../BUILDING.md).
 

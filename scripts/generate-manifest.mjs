@@ -8,6 +8,7 @@ const manifest = {
   categories: ['Themes', 'Keymaps', 'Other'], main: './extension.cjs',
   activationEvents: ['onStartupFinished'],
   contributes: {
+    configuration: { title: 'studio-n-code', properties: { 'studio.commandFeedback': { type: 'boolean', default: true, description: 'Show command progress and results in the interface and status bar.' } } },
     commands: [...actions.map(action => ({ command: action.id, title: action.title, category: 'Studio' })),
       { command: 'studio.restoreLayout', title: 'Restore Tool Window Layout', category: 'Studio' }],
     keybindings: actions.filter(action => action.key).map(action => ({
