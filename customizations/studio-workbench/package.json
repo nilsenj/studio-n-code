@@ -1,0 +1,679 @@
+{
+  "name": "studio-workbench",
+  "displayName": "studio-n-code Workbench",
+  "publisher": "studio-n-code",
+  "description": "studio-n-code theme, keyboard shortcuts, search, and tool-window workflow.",
+  "version": "0.2.0",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Themes",
+    "Keymaps",
+    "Other"
+  ],
+  "main": "./extension.cjs",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "studio-n-code",
+      "properties": {
+        "studio.commandFeedback": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show command progress and results in the interface and status bar."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "studio.searchEverywhere",
+        "title": "Search Everywhere",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.goToFile",
+        "title": "Go to File",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.recentFiles",
+        "title": "Recent Files",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.goToDefinition",
+        "title": "Go to Declaration or Definition",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.findUsages",
+        "title": "Find Usages",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.rename",
+        "title": "Rename",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.format",
+        "title": "Reformat Code",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.findInFiles",
+        "title": "Find in Files",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.replaceInFiles",
+        "title": "Replace in Files",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.back",
+        "title": "Navigate Back",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.forward",
+        "title": "Navigate Forward",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.project",
+        "title": "Project Tool Window",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.git",
+        "title": "Git Tool Window",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.terminal",
+        "title": "Terminal Tool Window",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.problems",
+        "title": "Problems Tool Window",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.run",
+        "title": "Run",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.debug",
+        "title": "Debug",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.stop",
+        "title": "Stop",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.commit",
+        "title": "Commit Tool Window",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.branches",
+        "title": "Branches and VCS Actions",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.gitHistory",
+        "title": "Git History",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.settings",
+        "title": "Settings",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.commitWindow",
+        "title": "Commit Tool Window",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.findAction",
+        "title": "Find Action",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.goToClass",
+        "title": "Go to Class",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.fileStructure",
+        "title": "File Structure",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.structure",
+        "title": "Structure Tool Window",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.hideToolWindow",
+        "title": "Hide Active Tool Window",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.lastEdit",
+        "title": "Last Edit Location",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.goToLine",
+        "title": "Go to Line",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.duplicate",
+        "title": "Duplicate Line or Selection",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.deleteLine",
+        "title": "Delete Line",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.joinLines",
+        "title": "Join Lines",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.expandSelection",
+        "title": "Extend Selection",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.shrinkSelection",
+        "title": "Shrink Selection",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.quickFix",
+        "title": "Show Intention Actions",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.organizeImports",
+        "title": "Optimize Imports",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.indent",
+        "title": "Auto-Indent Lines",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.lineComment",
+        "title": "Comment with Line Comment",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.blockComment",
+        "title": "Comment with Block Comment",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.moveLineUp",
+        "title": "Move Line Up",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.moveLineDown",
+        "title": "Move Line Down",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.closeTab",
+        "title": "Close Active Editor",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.nextTab",
+        "title": "Next Editor Tab",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.previousTab",
+        "title": "Previous Editor Tab",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.replace",
+        "title": "Replace in File",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.runWindow",
+        "title": "Run Tool Window",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.debugWindow",
+        "title": "Debug Tool Window",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.breakpoint",
+        "title": "Toggle Line Breakpoint",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.resume",
+        "title": "Resume Program",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.stepOver",
+        "title": "Step Over",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.stepInto",
+        "title": "Step Into",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.stepOut",
+        "title": "Step Out",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.push",
+        "title": "Push…",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.updateProject",
+        "title": "Update Project…",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.projects",
+        "title": "Open or Switch Project",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.runConfigurations",
+        "title": "Run/Debug Configurations",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.toolWindows",
+        "title": "More Tool Windows",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.goToSymbol",
+        "title": "Go to Symbol",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.codeBoard",
+        "title": "Code Board",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.aiMode",
+        "title": "AI Mode",
+        "category": "Studio"
+      },
+      {
+        "command": "studio.restoreLayout",
+        "title": "Restore Tool Window Layout",
+        "category": "Studio"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "studio.goToFile",
+        "key": "ctrl+shift+n"
+      },
+      {
+        "command": "studio.recentFiles",
+        "key": "ctrl+e"
+      },
+      {
+        "command": "studio.goToDefinition",
+        "key": "ctrl+b",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.findUsages",
+        "key": "alt+f7",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.rename",
+        "key": "shift+f6",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.format",
+        "key": "ctrl+alt+l",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.findInFiles",
+        "key": "ctrl+shift+f"
+      },
+      {
+        "command": "studio.replaceInFiles",
+        "key": "ctrl+shift+r"
+      },
+      {
+        "command": "studio.back",
+        "key": "ctrl+alt+left"
+      },
+      {
+        "command": "studio.forward",
+        "key": "ctrl+alt+right"
+      },
+      {
+        "command": "studio.project",
+        "key": "alt+1"
+      },
+      {
+        "command": "studio.git",
+        "key": "alt+9"
+      },
+      {
+        "command": "studio.terminal",
+        "key": "alt+f12"
+      },
+      {
+        "command": "studio.problems",
+        "key": "alt+6"
+      },
+      {
+        "command": "studio.run",
+        "key": "shift+f10"
+      },
+      {
+        "command": "studio.debug",
+        "key": "shift+f9"
+      },
+      {
+        "command": "studio.stop",
+        "key": "ctrl+f2",
+        "when": "inDebugMode"
+      },
+      {
+        "command": "studio.commit",
+        "key": "ctrl+k"
+      },
+      {
+        "command": "studio.branches",
+        "key": "alt+backquote"
+      },
+      {
+        "command": "studio.settings",
+        "key": "ctrl+alt+s"
+      },
+      {
+        "command": "studio.commitWindow",
+        "key": "alt+0"
+      },
+      {
+        "command": "studio.findAction",
+        "key": "ctrl+shift+a"
+      },
+      {
+        "command": "studio.goToClass",
+        "key": "ctrl+n"
+      },
+      {
+        "command": "studio.fileStructure",
+        "key": "ctrl+f12"
+      },
+      {
+        "command": "studio.structure",
+        "key": "alt+7"
+      },
+      {
+        "command": "studio.hideToolWindow",
+        "key": "shift+escape",
+        "when": "!editorTextFocus"
+      },
+      {
+        "command": "studio.lastEdit",
+        "key": "ctrl+shift+backspace"
+      },
+      {
+        "command": "studio.goToLine",
+        "key": "ctrl+g"
+      },
+      {
+        "command": "studio.duplicate",
+        "key": "ctrl+d",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.deleteLine",
+        "key": "ctrl+y",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.joinLines",
+        "key": "ctrl+shift+j",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.expandSelection",
+        "key": "ctrl+w",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.shrinkSelection",
+        "key": "ctrl+shift+w",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.quickFix",
+        "key": "alt+enter",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.organizeImports",
+        "key": "ctrl+alt+o",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.indent",
+        "key": "ctrl+alt+i",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.lineComment",
+        "key": "ctrl+/",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.blockComment",
+        "key": "ctrl+shift+/",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.moveLineUp",
+        "key": "alt+shift+up",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.moveLineDown",
+        "key": "alt+shift+down",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.closeTab",
+        "key": "ctrl+f4"
+      },
+      {
+        "command": "studio.nextTab",
+        "key": "alt+right"
+      },
+      {
+        "command": "studio.previousTab",
+        "key": "alt+left"
+      },
+      {
+        "command": "studio.replace",
+        "key": "ctrl+r",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.runWindow",
+        "key": "alt+4"
+      },
+      {
+        "command": "studio.debugWindow",
+        "key": "alt+5"
+      },
+      {
+        "command": "studio.breakpoint",
+        "key": "ctrl+f8",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "studio.resume",
+        "key": "f9",
+        "when": "inDebugMode"
+      },
+      {
+        "command": "studio.stepOver",
+        "key": "f8",
+        "when": "inDebugMode"
+      },
+      {
+        "command": "studio.stepInto",
+        "key": "f7",
+        "when": "inDebugMode"
+      },
+      {
+        "command": "studio.stepOut",
+        "key": "shift+f8",
+        "when": "inDebugMode"
+      },
+      {
+        "command": "studio.push",
+        "key": "ctrl+shift+k"
+      },
+      {
+        "command": "studio.updateProject",
+        "key": "ctrl+t"
+      },
+      {
+        "command": "studio.goToSymbol",
+        "key": "ctrl+alt+shift+n"
+      }
+    ],
+    "themes": [
+      {
+        "id": "Studio Dark",
+        "label": "Studio Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/studio-dark.json"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "studio-commit",
+          "title": "Commit",
+          "icon": "./icons/commit.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "studio-git",
+          "title": "Git",
+          "icon": "./icons/branch.svg"
+        }
+      ]
+    },
+    "views": {
+      "studio-commit": [
+        {
+          "id": "studio.commitView",
+          "name": "Commit",
+          "type": "webview",
+          "contextualTitle": "Commit"
+        }
+      ],
+      "studio-git": [
+        {
+          "id": "studio.gitLog",
+          "name": "Log",
+          "type": "webview",
+          "contextualTitle": "Git"
+        }
+      ]
+    },
+    "iconThemes": [
+      {
+        "id": "studio-icons",
+        "label": "Studio Outline Icons",
+        "path": "./icons/file-icons.json"
+      }
+    ],
+    "configurationDefaults": {
+      "workbench.colorTheme": "Studio Dark",
+      "workbench.iconTheme": "studio-icons",
+      "workbench.startupEditor": "none",
+      "workbench.tips.enabled": false,
+      "workbench.sideBar.location": "left",
+      "workbench.activityBar.location": "default",
+      "workbench.secondarySideBar.defaultVisibility": "hidden",
+      "workbench.panel.defaultLocation": "bottom",
+      "workbench.editor.showTabs": "multiple",
+      "workbench.editor.tabSizing": "fit",
+      "workbench.editor.tabActionCloseVisibility": true,
+      "workbench.editor.enablePreview": false,
+      "workbench.editor.highlightModifiedTabs": true,
+      "workbench.tree.indent": 16,
+      "workbench.tree.renderIndentGuides": "none",
+      "workbench.list.smoothScrolling": true,
+      "window.commandCenter": false,
+      "window.title": "${dirty}${activeEditorShort}${separator}${rootName}${separator}studio-n-code",
+      "editor.fontFamily": "'Cascadia Code', Consolas, 'Courier New', monospace",
+      "editor.fontSize": 14,
+      "editor.lineHeight": 22,
+      "editor.minimap.enabled": false,
+      "editor.bracketPairColorization.enabled": true,
+      "editor.guides.bracketPairs": "active",
+      "editor.renderLineHighlight": "all",
+      "editor.smoothScrolling": true,
+      "editor.cursorSmoothCaretAnimation": "on",
+      "editor.stickyScroll.enabled": false,
+      "editor.padding.top": 12,
+      "breadcrumbs.enabled": false,
+      "explorer.openEditors.visible": 0,
+      "terminal.integrated.fontSize": 13,
+      "scm.defaultViewMode": "tree",
+      "git.enableSmartCommit": false,
+      "git.confirmSync": true
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "studio.restoreLayout"
+        }
+      ]
+    }
+  }
+}

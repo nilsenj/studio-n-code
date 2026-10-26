@@ -1,0 +1,68 @@
+import { readFile, writeFile } from 'node:fs/promises';
+const folder = new URL('../customizations/studio-workbench/', import.meta.url);
+const actions = JSON.parse(await readFile(new URL('commands.json', folder), 'utf8'));
+const manifest = {
+  name: 'studio-workbench', displayName: 'studio-n-code Workbench', publisher: 'studio-n-code',
+  description: 'studio-n-code theme, keyboard shortcuts, search, and tool-window workflow.',
+  version: '0.2.0', license: 'MIT', engines: { vscode: '^1.100.0' },
+  categories: ['Themes', 'Keymaps', 'Other'], main: './extension.cjs',
+  activationEvents: ['onStartupFinished'],
+  contributes: {
+    configuration: { title: 'studio-n-code', properties: { 'studio.commandFeedback': { type: 'boolean', default: true, description: 'Show command progress and results in the interface and status bar.' } } },
+    commands: [...actions.map(action => ({ command: action.id, title: action.title, category: 'Studio' })),
+      { command: 'studio.restoreLayout', title: 'Restore Tool Window Layout', category: 'Studio' }],
+    keybindings: actions.filter(action => action.key).map(action => ({
+      command: action.id, key: action.key, ...(action.when ? { when: action.when } : {}),
+    })),
+    themes: [{ id: 'Studio Dark', label: 'Studio Dark', uiTheme: 'vs-dark', path: './themes/studio-dark.json' }],
+    viewsContainers: {
+      activitybar: [{ id: 'studio-commit', title: 'Commit', icon: './icons/commit.svg' }],
+      panel: [{ id: 'studio-git', title: 'Git', icon: './icons/branch.svg' }],
+    },
+    views: {
+      'studio-commit': [{ id: 'studio.commitView', name: 'Commit', type: 'webview', contextualTitle: 'Commit' }],
+      'studio-git': [{ id: 'studio.gitLog', name: 'Log', type: 'webview', contextualTitle: 'Git' }],
+    },
+    iconThemes: [{ id: 'studio-icons', label: 'Studio Outline Icons', path: './icons/file-icons.json' }],
+    configurationDefaults: {
+      'workbench.colorTheme': 'Studio Dark',
+      'workbench.iconTheme': 'studio-icons',
+      'workbench.startupEditor': 'none',
+      'workbench.tips.enabled': false,
+      'workbench.sideBar.location': 'left',
+      'workbench.activityBar.location': 'default',
+      'workbench.secondarySideBar.defaultVisibility': 'hidden',
+      'workbench.panel.defaultLocation': 'bottom',
+      'workbench.editor.showTabs': 'multiple',
+      'workbench.editor.tabSizing': 'fit',
+      'workbench.editor.tabActionCloseVisibility': true,
+      'workbench.editor.enablePreview': false,
+      'workbench.editor.highlightModifiedTabs': true,
+      'workbench.tree.indent': 16,
+      'workbench.tree.renderIndentGuides': 'none',
+      'workbench.list.smoothScrolling': true,
+      'window.commandCenter': false,
+      'window.title': '${dirty}${activeEditorShort}${separator}${rootName}${separator}studio-n-code',
+      'editor.fontFamily': "'Cascadia Code', Consolas, 'Courier New', monospace",
+      'editor.fontSize': 14,
+      'editor.lineHeight': 22,
+      'editor.minimap.enabled': false,
+      'editor.bracketPairColorization.enabled': true,
+      'editor.guides.bracketPairs': 'active',
+      'editor.renderLineHighlight': 'all',
+      'editor.smoothScrolling': true,
+      'editor.cursorSmoothCaretAnimation': 'on',
+      'editor.stickyScroll.enabled': false,
+      'editor.padding.top': 12,
+      'breadcrumbs.enabled': false,
+      'explorer.openEditors.visible': 0,
+      'terminal.integrated.fontSize': 13,
+      'scm.defaultViewMode': 'tree',
+      'git.enableSmartCommit': false,
+      'git.confirmSync': true,
+    },
+    menus: { 'commandPalette': [{ command: 'studio.restoreLayout' }] },
+  },
+};
+await writeFile(new URL('package.json', folder), JSON.stringify(manifest, null, 2) + '\n');
+console.log('Generated studio-n-code Workbench manifest from command registry');

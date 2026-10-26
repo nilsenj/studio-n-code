@@ -1,0 +1,48 @@
+(() => {
+  const vscode = acquireVsCodeApi();
+  const state = { board: null, tab: 'areas', query: '', limit: 120 };
+  const send = (type, more = {}) => vscode.postMessage({ type, ...more });
+  const $ = selector => document.querySelector(selector);
+  const make = (tag, cls, text) => { const node = document.createElement(tag); if (cls) node.className = cls; if (text !== undefined) node.textContent = text; return node; };
+  const categories = [['files', 'Files'], ['areas', 'Areas'], ['changes', 'Changes'], ['features', 'Features'], ['commits', 'History']];
+  function render() {
+    const board = state.board;
+    if (!board) return;
+    $('#project').textContent = board.noWorkspace ? 'Open a folder to explore your code.' : `${board.root.split(/[\\/]/).filter(Boolean).at(-1) || 'Project'}${board.branch ? ` · ${board.branch}` : ''}`;
+    const metrics = $('#metrics'); metrics.replaceChildren();
+    for (const [key, label] of [['files','Files'],['areas','Areas'],['changes','Changes'],['commits','Commits']]) {
+      const box = make('div','metric'); box.append(make('strong','',String(board[key]?.length || 0)),make('span','',label)); metrics.append(box);
+    }
+    const nav = $('#tabs'); nav.replaceChildren();
+    for (const [key, label] of categories) {
+      const button = make('button',key === state.tab ? 'selected' : '',`${label} · ${board[key]?.length || 0}`);
+      button.type = 'button'; button.onclick = () => { state.tab = key; state.limit = 120; render(); }; nav.append(button);
+    }
+    const items = board[state.tab] || [];
+    const terms = state.query.toLowerCase().split(/\s+/).filter(Boolean);
+    const matching = terms.length ? items.filter(item => terms.every(term => `${item.title} ${item.path || ''} ${item.scope || ''} ${item.hash || ''}`.toLowerCase().includes(term))) : items;
+    const cards = $('#cards'); cards.replaceChildren();
+    for (const item of matching.slice(0,state.limit)) {
+      const card = make('article','card'); card.setAttribute('role','listitem');
+      card.append(make('span','kind',item.kind === 'area' ? `${item.fileCount} files` : item.kind),make('h3','',item.title),make('span','path',item.path || item.scope || item.date || item.hash?.slice(0,12) || ''));
+      const actions = make('div','actions');
+      if (item.kind === 'file' || item.kind === 'change' || item.kind === 'commit') {
+        const open = make('button','',item.kind === 'commit' ? 'Git history' : 'Open'); open.type='button'; open.onclick=()=>send('open',{id:item.id}); actions.append(open);
+      }
+      const explain = make('button','explain','✦ Explain'); explain.type='button'; explain.setAttribute('aria-label',`Explain ${item.title}`); explain.onclick=()=>send('explain',{id:item.id}); actions.append(explain);
+      card.append(actions); cards.append(card);
+    }
+    if (!matching.length) cards.append(make('div','empty',state.query ? 'No matches. Try another search.' : 'Nothing in this category yet.'));
+    $('#more').hidden = matching.length <= state.limit;
+  }
+  $('#search').oninput = event => { state.query = event.target.value.trim(); state.limit = 120; render(); };
+  $('#refresh').onclick = () => send('refresh');
+  $('#open-ai').onclick = () => send('ai');
+  $('#more').onclick = () => { state.limit += 120; render(); };
+  window.addEventListener('message', event => {
+    const message = event.data;
+    if (message.type === 'board') { state.board = message.board; $('#message').textContent = ''; render(); }
+    if (message.type === 'error') $('#message').textContent = message.message;
+  });
+  send('ready');
+})();

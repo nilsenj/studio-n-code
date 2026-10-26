@@ -1,0 +1,8 @@
+{
+  "name": "studio-extension-compatibility-tests",
+  "publisher": "studio-n-code",
+  "version": "0.2.0",
+  "engines": { "vscode": "^1.90.0" },
+  "main": "./test.cjs",
+  "activationEvents": []
+}

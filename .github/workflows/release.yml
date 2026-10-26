@@ -1,0 +1,40 @@
+name: Windows preview release
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [package.json, .github/workflows/release.yml]
+permissions:
+  contents: write
+concurrency:
+  group: windows-preview-release
+  cancel-in-progress: false
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run check:release
+      - name: Build standalone application and installer
+        shell: pwsh
+        run: ./scripts/package-windows.ps1 -DevelopmentWithoutSpectre
+      - name: Verify extension installation and formatting
+        shell: pwsh
+        run: ./scripts/test-extensions.ps1 -Application ./VSCode-win32-x64
+      - name: Publish preview assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          gh release view "v$version" --repo "$env:GITHUB_REPOSITORY" *> $null
+          if ($LASTEXITCODE -eq 0) { throw "Release v$version already exists; increment package.json before publishing." }
+          gh release create "v$version" dist/* --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --prerelease --title "studio-n-code $version preview" --notes-file RELEASE_NOTES.md
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed.' }

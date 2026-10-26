@@ -1,0 +1,17 @@
+upstream/
+.runtime/
+.logs/
+.superpowers/
+node_modules/
+artifacts/
+
+.private/
+.env
+.env.*
+!.env.example
+*.log
+*.vsix
+dist/
+coverage/
+*.lnk
+/VSCode-win32-*/

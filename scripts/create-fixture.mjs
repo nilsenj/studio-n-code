@@ -1,0 +1,17 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { resolve, join } from 'node:path';
+const root = resolve('artifacts', `fixture-${Date.now()}`);
+await mkdir(join(root, 'src'), { recursive: true });
+await writeFile(join(root, 'src/main.ts'), 'export function greet(name: string): string { return `Hello, ${name}`; }\nconsole.log(greet("Studio"));\n');
+await writeFile(join(root, 'tsconfig.json'), JSON.stringify({ compilerOptions: { strict: true, target: 'ES2022', module: 'commonjs' }, include: ['src'] }, null, 2));
+await writeFile(join(root, 'sample.php'), '<?php\nfunction greet(string $name): string {\n    return "Hello, " . $name;\n}\necho greet("Studio");\n');
+await writeFile(join(root, 'run.cjs'), "require('node:fs').writeFileSync(require('node:path').join(__dirname, 'debug-result.txt'), 'studio-debug-ok');\n");
+await writeFile(join(root, 'README.md'), '# studio-n-code test project\n\nA disposable project for verifying editing, TypeScript navigation, Git and terminal execution.\n');
+execFileSync('git', ['init', '-b', 'main'], { cwd: root });
+execFileSync('git', ['config', 'user.name', 'Studio Smoke'], { cwd: root });
+execFileSync('git', ['config', 'user.email', 'smoke@studio.invalid'], { cwd: root });
+execFileSync('git', ['add', '.'], { cwd: root });
+execFileSync('git', ['-c', 'user.name=Studio Smoke', '-c', 'user.email=smoke@studio.invalid', 'commit', '-m', 'Initial fixture'], { cwd: root });
+await writeFile(resolve('artifacts/fixture-path.txt'), root);
+console.log(root);
