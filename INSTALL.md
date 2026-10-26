@@ -12,7 +12,7 @@ Node.js, npm, Python and C++ Build Tools are not required to install or launch t
 The preview is unsigned. Windows may show an unknown-publisher message; verify the repository/download before choosing to run it. Compare the complete hash with the matching filename in the release's `SHA256SUMS.txt`:
 
 ```powershell
-Get-FileHash .\studio-n-code-0.2.0-windows-x64-setup.exe -Algorithm SHA256
+Get-FileHash .\studio-n-code-0.2.1-windows-x64-setup.exe -Algorithm SHA256
 ```
 
 ## Portable ZIP
@@ -21,7 +21,7 @@ Download the `windows-x64.zip` asset, extract **all** files into a writable fold
 
 ## Extensions and commands
 
-Open **Code Board** from the toolbar to explore files, areas, changes, features and history. Each card has **Explain**. Open **AI Mode > Connection** to add your endpoint and model; see [Code Board and AI guide](docs/ai-board.md). No model credentials are included in the installer.
+Open **Code Board** from the toolbar to explore files, areas, changes, features and history. Click any card for its details; each card has **Explain**. Open **AI Mode > Connection**, choose OpenAI, Google Gemini or Anthropic, enter an API key and discover your available models. Keys are stored separately in the OS-backed secret store. See [Code Board and AI guide](docs/ai-board.md). No model credentials are included in the installer.
 
 Open **Extensions**, search Open VSX and select **Install**. Use **Extensions: Install from VSIX...** for author-provided compatible files. See [compatibility details](docs/extensions.md).
 

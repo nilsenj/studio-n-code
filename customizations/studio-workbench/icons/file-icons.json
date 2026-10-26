@@ -1,11 +1,18 @@
 {
   "iconDefinitions": {
-    "folder": { "iconPath": "./folder.svg" }, "folderOpen": { "iconPath": "./folder-open.svg" },
-    "code": { "iconPath": "./code.svg" }, "php": { "iconPath": "./php.svg" },
-    "ts": { "iconPath": "./ts.svg" }, "js": { "iconPath": "./js.svg" }, "json": { "iconPath": "./json.svg" }, "text": { "iconPath": "./text.svg" }
+    "folder": {"iconPath":"./folder.svg"}, "folderOpen":{"iconPath":"./folder-open.svg"},
+    "code":{"iconPath":"./code.svg"}, "php":{"iconPath":"./php.svg"}, "ts":{"iconPath":"./ts.svg"}, "js":{"iconPath":"./js.svg"}, "json":{"iconPath":"./json.svg"}, "text":{"iconPath":"./text.svg"},
+    "python":{"iconPath":"./python.svg"}, "go":{"iconPath":"./go.svg"}, "rust":{"iconPath":"./rust.svg"}, "java":{"iconPath":"./java.svg"}, "kotlin":{"iconPath":"./kotlin.svg"}, "csharp":{"iconPath":"./csharp.svg"}, "cpp":{"iconPath":"./cpp.svg"}, "ruby":{"iconPath":"./ruby.svg"}, "swift":{"iconPath":"./swift.svg"}, "shell":{"iconPath":"./shell.svg"}, "sql":{"iconPath":"./sql.svg"}, "markdown":{"iconPath":"./markdown.svg"}, "yaml":{"iconPath":"./yaml.svg"}, "toml":{"iconPath":"./toml.svg"}, "docker":{"iconPath":"./docker.svg"}, "config":{"iconPath":"./config.svg"}, "build":{"iconPath":"./build.svg"}, "lock":{"iconPath":"./lock.svg"}, "graphql":{"iconPath":"./graphql.svg"}, "vue":{"iconPath":"./vue.svg"}, "svelte":{"iconPath":"./svelte.svg"}, "xml":{"iconPath":"./xml.svg"}, "web":{"iconPath":"./web.svg"}, "database":{"iconPath":"./database.svg"}
   },
-  "folder": "folder", "folderExpanded": "folderOpen", "rootFolder": "folder", "rootFolderExpanded": "folderOpen", "file": "text",
-  "fileExtensions": { "php": "php", "ts": "ts", "tsx": "ts", "js": "js", "jsx": "js", "mjs": "js", "cjs": "js", "json": "json", "html": "code", "css": "code", "scss": "code", "vue": "code", "xml": "code" },
-  "languageIds": { "php": "php", "typescript": "ts", "javascript": "js", "json": "json" },
+  "folder":"folder", "folderExpanded":"folderOpen", "rootFolder":"folder", "rootFolderExpanded":"folderOpen", "file":"text",
+  "fileExtensions": {
+    "php":"php", "phtml":"php", "blade.php":"php", "ts":"ts", "tsx":"ts", "mts":"ts", "cts":"ts", "js":"js", "jsx":"js", "mjs":"js", "cjs":"js", "json":"json", "jsonc":"json", "json5":"json",
+    "html":"web", "htm":"web", "css":"web", "scss":"web", "sass":"web", "less":"web", "vue":"vue", "svelte":"svelte", "astro":"web", "xml":"xml", "svg":"xml", "xhtml":"xml",
+    "py":"python", "pyi":"python", "pyx":"python", "go":"go", "rs":"rust", "java":"java", "class":"java", "kt":"kotlin", "kts":"kotlin", "cs":"csharp", "csx":"csharp", "c":"cpp", "h":"cpp", "cc":"cpp", "cpp":"cpp", "cxx":"cpp", "hpp":"cpp", "hh":"cpp", "hxx":"cpp", "rb":"ruby", "gemspec":"ruby", "swift":"swift", "sh":"shell", "bash":"shell", "zsh":"shell", "fish":"shell", "ps1":"shell", "psm1":"shell", "bat":"shell", "cmd":"shell",
+    "sql":"sql", "prisma":"database", "graphql":"graphql", "gql":"graphql", "md":"markdown", "mdx":"markdown", "rst":"markdown", "txt":"text", "log":"text", "csv":"database", "tsv":"database", "db":"database", "sqlite":"database",
+    "yaml":"yaml", "yml":"yaml", "toml":"toml", "ini":"config", "conf":"config", "cfg":"config", "properties":"config", "env":"config", "editorconfig":"config", "gitignore":"config", "gitattributes":"config", "npmrc":"config", "nvmrc":"config", "prettierrc":"config", "eslintrc":"config", "lock":"lock", "sum":"lock", "mod":"build", "gradle":"build", "kts":"kotlin", "xml":"xml", "dockerfile":"docker", "containerfile":"docker", "makefile":"build", "mk":"build", "cmake":"build", "wasm":"build", "bin":"build", "patch":"build", "diff":"build", "zip":"build", "tar":"build", "gz":"build"
+  },
+  "fileNames": {".gitignore":"config",".gitattributes":"config",".gitmodules":"config",".editorconfig":"config",".env":"config",".env.local":"config",".env.example":"config",".npmrc":"config",".nvmrc":"config",".prettierrc":"config",".eslintrc":"config","Dockerfile":"docker","Containerfile":"docker","Makefile":"build","GNUmakefile":"build","CMakeLists.txt":"build","Cargo.toml":"rust","Cargo.lock":"lock","Gemfile":"ruby","Gemfile.lock":"lock","Justfile":"build","LICENSE":"text","README.md":"markdown"},
+  "languageIds": {"php":"php","typescript":"ts","javascript":"js","json":"json","python":"python","go":"go","rust":"rust","java":"java","kotlin":"kotlin","csharp":"csharp","cpp":"cpp","ruby":"ruby","swift":"swift","shellscript":"shell","sql":"sql","markdown":"markdown","yaml":"yaml","dockerfile":"docker","vue":"vue","svelte":"svelte","graphql":"graphql"},
   "hidesExplorerArrows": false
 }

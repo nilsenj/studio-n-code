@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { readFile as readText } from 'node:fs/promises';
 
 test('application icon includes Windows sizes and correctly sized PNG exports', async () => {
   const ico = await readFile(new URL('../assets/icon.ico', import.meta.url));
@@ -18,4 +19,13 @@ test('application icon includes Windows sizes and correctly sized PNG exports', 
     assert.equal(png.readUInt32BE(16), size);
     assert.equal(png.readUInt32BE(20), size);
   }
+});
+
+test('Studio file icon theme recognizes common source, config, build and lockfile types', async () => {
+  const theme = JSON.parse(await readText(new URL('../customizations/studio-workbench/icons/file-icons.json', import.meta.url), 'utf8'));
+  for (const extension of ['py','go','rs','java','kt','cs','c','cpp','sql','md','yaml','yml','toml','dockerfile','sh','vue','svelte','graphql','lock','gradle','wasm']) {
+    assert.ok(theme.fileExtensions[extension], `missing icon mapping for .${extension}`);
+    assert.ok(theme.iconDefinitions[theme.fileExtensions[extension]], `missing icon definition for .${extension}`);
+  }
+  for (const name of ['.gitignore','.env','.editorconfig','Dockerfile','Makefile']) assert.ok(theme.fileNames[name], `missing icon mapping for ${name}`);
 });
