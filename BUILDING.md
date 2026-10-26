@@ -2,7 +2,7 @@
 
 For normal installation use [INSTALL.md](INSTALL.md). These instructions are for source developers.
 
-To build the standalone Windows package, run `npm run dist:win` after installing the prerequisites below. It runs the upstream production pipeline, checks the packaged app in a disposable smoke-test profile, then produces an installer, portable ZIP and SHA-256 digests in `dist/`. The explicit `-DevelopmentWithoutSpectre` option can also be passed directly to `scripts/package-windows.ps1` for preview toolchains without Spectre libraries. Such packages must be described as previews using ordinary runtime libraries.
+To build the standalone Windows package, run `npm run dist:win` after installing the prerequisites below. It runs the upstream production pipeline, checks the packaged app in a disposable smoke-test profile, then produces an installer, portable ZIP and SHA-256 digests in `dist/`. On an Ubuntu 22.04 x64 host, install `build-essential`, `pkg-config`, `libx11-dev`, `libx11-xcb-dev`, `libxkbfile-dev`, `libnotify-bin` and `libkrb5-dev`, then run `npm ci && bash scripts/package-linux.sh` to build a Linux x64 archive, installer script and SHA-256 file in `dist/`. The Linux release pipeline publishes these assets alongside the Windows release when a new app version is released. To build locally, install Node.js 24.x (24.18.0 or newer) and npm below version 13. Linux ARM and other distributions have not been validated. The explicit `-DevelopmentWithoutSpectre` option can also be passed directly to `scripts/package-windows.ps1` for preview toolchains without Spectre libraries. Such packages must be described as previews using ordinary runtime libraries.
 
 ## Supported development environment
 
@@ -44,9 +44,9 @@ Alternatively, run `Start studio-n-code.cmd`. Use the launcher rather than openi
 
 For a local shortcut using the application icon, run `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-shortcut.ps1`. This creates `studio-n-code.lnk` in the checkout. The machine-specific shortcut is ignored by Git; regenerate it if you move the checkout.
 
-Development executable: `upstream/.build/electron/studio-n-code.exe`.
+Development executable: `upstream/.build/electron/studio-n-code.exe` on Windows or `upstream/.build/electron/studio-n-code` on Linux.
 
-Application settings and extension installations live under `.runtime/studio-n-code/` in this checkout. Shared application storage uses `.studio-n-code-shared` in the user's home directory. The project launcher writes stdout/stderr to `.logs/`; closing the launching terminal does not close those application log handles.
+Application settings and extension installations use the same per-user profile as the installed app (Windows `%APPDATA%`, Linux `$XDG_CONFIG_HOME` or `~/.config`). Smoke runs use isolated data directories. The project launcher writes stdout/stderr to `.logs/`; closing the launching terminal does not close those application log handles.
 
 ## Local development without Spectre runtime libraries
 

@@ -4,7 +4,7 @@
 
 A desktop coding studio by Studio N, with a focused workspace, integrated Git tools and practical keyboard commands.
 
-**Windows x64 preview:** [Download a release](https://github.com/nilsenj/studio-n-code/releases) and run the `windows-x64-setup.exe` asset. No developer tools are required to install the app. See [INSTALL.md](INSTALL.md) for portable installation, updates and troubleshooting. Preview binaries are currently unsigned.
+**Windows x64 preview:** [Download a release](https://github.com/nilsenj/studio-n-code/releases) and run the `windows-x64-setup.exe` asset. **Linux x64 preview:** after Linux assets are published, install the latest package with `curl -fsSL https://raw.githubusercontent.com/nilsenj/studio-n-code/main/scripts/install-linux.sh | bash`. See [INSTALL.md](INSTALL.md) for prerequisites, updates and troubleshooting. Preview binaries are currently unsigned.
 
 ## Features
 
@@ -61,7 +61,7 @@ npm run build
 npm start
 ```
 
-The release target is Windows x64. Signing, automatic updates and other platform packages are not available yet.
+Windows x64 and Linux x64 are release targets. macOS and Linux ARM builds are not available yet. Signing and automatic updates are not available yet.
 
 ## License
 

@@ -1,13 +1,13 @@
-name: Windows preview release
+name: Desktop preview release
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [package.json, .github/workflows/release.yml]
+    paths: [package.json]
 permissions:
   contents: write
 concurrency:
-  group: windows-preview-release
+  group: desktop-preview-release
   cancel-in-progress: false
 jobs:
   windows:
@@ -38,3 +38,28 @@ jobs:
           if ($LASTEXITCODE -eq 0) { throw "Release v$version already exists; increment package.json before publishing." }
           gh release create "v$version" dist/* --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --prerelease --title "studio-n-code $version preview" --notes-file RELEASE_NOTES.md
           if ($LASTEXITCODE -ne 0) { throw 'Release publication failed.' }
+
+  linux:
+    needs: windows
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install Linux build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libx11-dev libx11-xcb-dev libxkbfile-dev libnotify-bin libkrb5-dev
+      - run: npm ci
+      - name: Build Linux x64 package and installer
+        run: bash ./scripts/package-linux.sh
+      - name: Add Linux installer assets to the preview release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(node -p 'JSON.parse(require("node:fs").readFileSync("package.json", "utf8")).version')"
+          gh release upload "v$version" \
+            "dist/studio-n-code-$version-linux-x64.tar.gz" \
+            dist/install-linux.sh dist/SHA256SUMS-linux.txt \
+            --repo "$GITHUB_REPOSITORY"

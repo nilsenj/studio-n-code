@@ -6,11 +6,16 @@ const { realpath } = require('node:fs/promises');
 const { loadBoard, contextForCard, boardContext, detailForCard } = require('./code-board.cjs');
 const { complete, compatibleEndpoint, extractReplacement, listModels, recommendModel, PROVIDERS } = require('./ai-mode.cjs');
 
+const EXPLANATION_HISTORY_KEY = 'studio.ai.explanationHistory.v1';
+const MAX_EXPLANATIONS_PER_ITEM = 6;
+const MAX_EXPLANATIONS_TOTAL = 120;
+const MAX_EXPLANATION_LENGTH = 12000;
+
 function registerBoardAI(vscode, context, report) {
   let boardPanel, aiPanel, board, selected, request, proposal, explainOnOpen = false;
   let lastEditor = vscode.window.activeTextEditor;
   let conversation = [];
-  let conversationRoot;
+  let conversationScope = '';
   const proposalScheme = 'studio-ai-proposal';
   const proposed = new Map();
   const proposalChanged = new vscode.EventEmitter();
@@ -18,6 +23,55 @@ function registerBoardAI(vscode, context, report) {
     onDidChange: proposalChanged.event,
     provideTextDocumentContent: uri => proposed.get(uri.toString()) || '',
   }), proposalChanged, vscode.window.onDidChangeActiveTextEditor(editor => { if (editor?.document.uri.scheme === 'file') lastEditor = editor; }));
+
+  function explanationItem() {
+    if (selected && board) return { root: board.root, id: selected.id, kind: selected.kind, title: selected.title, path: selected.path || '', hash: selected.hash || '' };
+    const document = lastEditor?.document;
+    if (!document || document.uri.scheme !== 'file') return undefined;
+    const folder = vscode.workspace.getWorkspaceFolder(document.uri);
+    if (!folder) return undefined;
+    const file = path.relative(folder.uri.fsPath, document.uri.fsPath).replaceAll('\\', '/');
+    return { root: folder.uri.fsPath, id: `file:${file}`, kind: 'file', title: path.basename(file), path: file, hash: '' };
+  }
+
+  function itemKey(item) {
+    let root = path.resolve(item.root);
+    if (process.platform === 'win32') root = root.toLowerCase();
+    return crypto.createHash('sha256').update(`${root}\0${item.id}`).digest('hex');
+  }
+
+  function selectConversationScope() {
+    const item = explanationItem();
+    const active = item ? itemKey(item) : `workspace:${board?.root || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || ''}`;
+    if (conversationScope !== active) { conversation = []; proposal = undefined; request?.abort(); conversationScope = active; }
+  }
+
+  function explanationHistory(item) {
+    if (!item) return [];
+    const key = itemKey(item);
+    const records = context.workspaceState.get(EXPLANATION_HISTORY_KEY, []);
+    if (!Array.isArray(records)) return [];
+    return records.filter(record => record?.itemKey === key).slice(-MAX_EXPLANATIONS_PER_ITEM).reverse();
+  }
+
+  async function saveExplanation(item, prompt, answer, provider, model) {
+    if (!item) return false;
+    const records = context.workspaceState.get(EXPLANATION_HISTORY_KEY, []);
+    const history = Array.isArray(records) ? records : [];
+    const key = itemKey(item);
+    const retained = history.filter(record => record?.itemKey !== key).concat(history.filter(record => record?.itemKey === key).slice(-(MAX_EXPLANATIONS_PER_ITEM - 1)));
+    retained.push({ itemKey: key, itemId: item.id, kind: item.kind, title: item.title, path: item.path, hash: item.hash,
+      provider, model, savedAt: new Date().toISOString(), prompt: prompt.slice(0, 2000), response: answer.slice(0, MAX_EXPLANATION_LENGTH) });
+    retained.sort((a, b) => String(a.savedAt).localeCompare(String(b.savedAt)));
+    await context.workspaceState.update(EXPLANATION_HISTORY_KEY, retained.slice(-MAX_EXPLANATIONS_TOTAL));
+    return true;
+  }
+
+  async function cardDetails(card) {
+    const details = await detailForCard(vscode, board, card);
+    if (details) details.explanationHistory = explanationHistory({ root: board.root, id: card.id });
+    return details;
+  }
 
   function panel(kind) {
     const name = kind === 'board' ? 'Code Board' : 'AI Mode';
@@ -44,9 +98,10 @@ function registerBoardAI(vscode, context, report) {
     const active = lastEditor?.document.uri;
     const folder = active ? vscode.workspace.getWorkspaceFolder(active) || vscode.workspace.workspaceFolders?.[0] : vscode.workspace.workspaceFolders?.[0];
     const next = await loadBoard(vscode, folder);
-    if (board?.root && board.root !== next.root) { conversation = []; selected = undefined; proposal = undefined; }
+    if (board?.root && board.root !== next.root) { conversation = []; selected = undefined; proposal = undefined; conversationScope = ''; }
     board = next;
     selected = selected && [...board.files, ...board.areas, ...board.changes, ...board.features, ...board.commits].find(card => card.id === selected.id);
+    selectConversationScope();
     await boardPanel?.webview.postMessage({ type: 'board', board });
   }
 
@@ -54,6 +109,7 @@ function registerBoardAI(vscode, context, report) {
 
   async function showAI(card, explain = false) {
     if (card) selected = card;
+    selectConversationScope();
     explainOnOpen = explain;
     const view = panel('ai');
     await view.webview.postMessage({ type: 'context', label: selected ? `${selected.kind}: ${selected.path || selected.title}` : lastEditor ? vscode.workspace.asRelativePath(lastEditor.document.uri) : '', explain });
@@ -100,8 +156,9 @@ function registerBoardAI(vscode, context, report) {
     if (!model) throw new Error('Connect a model in AI Mode settings first.');
     const key = await context.secrets.get(`studio.aiKey.${provider}`) || (provider === 'openai' ? await context.secrets.get('studio.aiKey') : '') || '';
     if (!key) throw new Error(`Add an API key for ${provider === 'gemini' ? 'Google Gemini' : provider === 'anthropic' ? 'Anthropic' : 'OpenAI'} in AI Mode settings.`);
-    const currentRoot = selected && board ? board.root : lastEditor ? vscode.workspace.getWorkspaceFolder(lastEditor.document.uri)?.uri.fsPath : undefined;
-    if (conversationRoot !== currentRoot) { conversation = []; conversationRoot = currentRoot; }
+    selectConversationScope();
+    const requestScope = conversationScope;
+    const explainedItem = explanationItem();
     proposal = undefined;
     const file = mode === 'edit' ? await candidateFile() : undefined;
     if (mode === 'edit' && !file) throw new Error('Select a file on the Code Board or open one in the editor before using Edit file.');
@@ -124,8 +181,21 @@ function registerBoardAI(vscode, context, report) {
       if (mode === 'edit') {
         proposal = { ...file, replacement: extractReplacement(answer) };
       } else proposal = undefined;
-      conversation.push({ role: 'user', content: `Request: ${prompt}\nContext: ${source.slice(0, 12000)}` }, { role: 'assistant', content: answer.slice(0, 30000) });
-      await aiPanel?.webview.postMessage({ type: 'done', edit: !!proposal, message: proposal ? 'Edit ready. Preview the diff before applying.' : 'Completed.' });
+      let completionMessage = proposal ? 'Edit ready. Preview the diff before applying.' : 'Completed.';
+      if (mode === 'explain' && explainedItem) {
+        try {
+          await saveExplanation(explainedItem, prompt, answer, provider, model);
+          completionMessage = 'Explanation saved to this item’s history.';
+        } catch (error) {
+          completionMessage = 'Explanation completed, but its history could not be saved.';
+          report(error);
+        }
+      }
+      if (conversationScope === requestScope) {
+        conversation.push({ role: 'user', content: `Request: ${prompt}\nContext: ${source.slice(0, 12000)}` }, { role: 'assistant', content: answer.slice(0, 30000) });
+        conversation = conversation.slice(-8);
+      }
+      await aiPanel?.webview.postMessage({ type: 'done', edit: !!proposal, message: completionMessage });
       if (proposal) await previewEdit();
       return { mode, response: answer, proposed: !!proposal };
     } catch (error) {
@@ -185,10 +255,10 @@ function registerBoardAI(vscode, context, report) {
       const card = [...(board?.files || []), ...(board?.areas || []), ...(board?.changes || []), ...(board?.features || []), ...(board?.commits || [])].find(item => item.id === message.id);
       if (!card) return;
       if (message.type === 'explain') return showAI(card, true);
-      if (message.type === 'details') return boardPanel.webview.postMessage({ type: 'details', details: await detailForCard(vscode, board, card) });
+      if (message.type === 'details') return boardPanel.webview.postMessage({ type: 'details', details: await cardDetails(card) });
       if (message.type === 'open') {
-        if (card.kind === 'commit') return boardPanel.webview.postMessage({ type: 'details', details: await detailForCard(vscode, board, card) });
-        if (card.kind === 'area' || card.kind === 'feature') return boardPanel.webview.postMessage({ type: 'details', details: await detailForCard(vscode, board, card) });
+        if (card.kind === 'commit') return boardPanel.webview.postMessage({ type: 'details', details: await cardDetails(card) });
+        if (card.kind === 'area' || card.kind === 'feature') return boardPanel.webview.postMessage({ type: 'details', details: await cardDetails(card) });
         if (['file', 'change'].includes(card.kind)) {
           const file = path.resolve(board.root, card.path);
           if (!file.startsWith(path.resolve(board.root) + path.sep)) throw new Error('File is outside the project.');
@@ -198,7 +268,7 @@ function registerBoardAI(vscode, context, report) {
       return;
     }
     if (message.type === 'ready') { await sendSettings(); await aiPanel?.webview.postMessage({ type: 'context', label: selected ? `${selected.kind}: ${selected.path || selected.title}` : lastEditor ? vscode.workspace.asRelativePath(lastEditor.document.uri) : '', explain: explainOnOpen }); }
-    if (message.type === 'useActiveFile') { selected = undefined; proposal = undefined; explainOnOpen = false; await aiPanel?.webview.postMessage({ type: 'context', label: lastEditor ? vscode.workspace.asRelativePath(lastEditor.document.uri) : '' }); return; }
+    if (message.type === 'useActiveFile') { selected = undefined; proposal = undefined; explainOnOpen = false; selectConversationScope(); await aiPanel?.webview.postMessage({ type: 'context', label: lastEditor ? vscode.workspace.asRelativePath(lastEditor.document.uri) : '' }); return; }
     if (message.type === 'board') return showBoard();
     if (message.type === 'saveSettings') {
       return configure(message);

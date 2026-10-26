@@ -1,5 +1,17 @@
 # Install studio-n-code
 
+## Linux x64
+
+After a release includes Linux assets, install the latest preview for your user account with:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/nilsenj/studio-n-code/main/scripts/install-linux.sh | bash
+```
+
+The script checks the release archive against its SHA-256 checksum, installs under `~/.local/opt/studio-n-code/`, adds a launcher in `~/.local/bin/`, and creates an applications-menu entry. It does not require administrator access. `curl` (or `wget`), `tar`, and `sha256sum` are required. Add `~/.local/bin` to `PATH` if you want to start the editor from a terminal. The build host is Ubuntu 22.04 x64; other distribution compatibility and ARM builds are not yet validated. Minimal Ubuntu/WSL images also need the Electron runtime libraries `libnspr4`, `libnss3` and `libasound2` (`sudo apt install libnspr4 libnss3 libasound2`).
+
+To update, run the same command again. To uninstall, remove `~/.local/opt/studio-n-code`, `~/.local/bin/studio-n-code`, `~/.local/share/applications/studio-n-code.desktop`, and `~/.local/share/icons/hicolor/256x256/apps/studio-n-code.png`. Workspace files are not affected.
+
 ## Windows 10/11 x64
 
 1. Open [Releases](https://github.com/nilsenj/studio-n-code/releases) and select the newest preview.
@@ -12,7 +24,7 @@ Node.js, npm, Python and C++ Build Tools are not required to install or launch t
 The preview is unsigned. Windows may show an unknown-publisher message; verify the repository/download before choosing to run it. Compare the complete hash with the matching filename in the release's `SHA256SUMS.txt`:
 
 ```powershell
-Get-FileHash .\studio-n-code-0.2.1-windows-x64-setup.exe -Algorithm SHA256
+Get-FileHash .\studio-n-code-0.2.2-windows-x64-setup.exe -Algorithm SHA256
 ```
 
 ## Portable ZIP

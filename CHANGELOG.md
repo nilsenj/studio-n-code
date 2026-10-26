@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2 — 2026-10-27
+
+- Linux x64 Ubuntu 22.04 package, checksum-verified per-user installer, and release automation alongside Windows assets.
+- AI explanations are saved to their Code Board item and remain available in that item's details.
+- Keep the editor user profile stable across rebuilds and provide a platform-native development launcher.
+
 ## 0.2.1 — 2026-10-26
 
 - AI Mode renders safe Markdown answers and offers Concise, Standard and Detailed response lengths with provider-side output caps.
