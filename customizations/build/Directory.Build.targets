@@ -1,0 +1,10 @@
+<Project>
+  <!-- Explicit opt-in for local x64 development builds without MSVC Spectre libraries. -->
+  <PropertyGroup>
+    <SpectreMitigation>false</SpectreMitigation>
+    <LibraryPath>$(VCToolsInstallDir)lib\$(Platform);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Link><AdditionalLibraryDirectories>$(VCToolsInstallDir)lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories></Link>
+  </ItemDefinitionGroup>
+</Project>

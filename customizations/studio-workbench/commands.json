@@ -1,0 +1,375 @@
+[
+  {
+    "id": "studio.searchEverywhere",
+    "title": "Search Everywhere",
+    "handler": "search"
+  },
+  {
+    "id": "studio.goToFile",
+    "title": "Go to File",
+    "key": "ctrl+shift+n",
+    "target": "workbench.action.quickOpen"
+  },
+  {
+    "id": "studio.recentFiles",
+    "title": "Recent Files",
+    "key": "ctrl+e",
+    "target": "workbench.action.quickOpenPreviousRecentlyUsedEditor"
+  },
+  {
+    "id": "studio.goToDefinition",
+    "title": "Go to Declaration or Definition",
+    "key": "ctrl+b",
+    "when": "editorTextFocus && editorHasDefinitionProvider",
+    "target": "editor.action.revealDefinition"
+  },
+  {
+    "id": "studio.findUsages",
+    "title": "Find Usages",
+    "key": "alt+f7",
+    "when": "editorTextFocus && editorHasReferenceProvider",
+    "target": "editor.action.referenceSearch.trigger"
+  },
+  {
+    "id": "studio.rename",
+    "title": "Rename",
+    "key": "shift+f6",
+    "when": "editorTextFocus && editorHasRenameProvider",
+    "target": "editor.action.rename"
+  },
+  {
+    "id": "studio.format",
+    "title": "Reformat Code",
+    "key": "ctrl+alt+l",
+    "when": "editorTextFocus && editorHasDocumentFormattingProvider",
+    "target": "editor.action.formatDocument"
+  },
+  {
+    "id": "studio.findInFiles",
+    "title": "Find in Files",
+    "key": "ctrl+shift+f",
+    "target": "workbench.action.findInFiles"
+  },
+  {
+    "id": "studio.replaceInFiles",
+    "title": "Replace in Files",
+    "key": "ctrl+shift+r",
+    "target": "workbench.action.replaceInFiles"
+  },
+  {
+    "id": "studio.back",
+    "title": "Navigate Back",
+    "key": "ctrl+alt+left",
+    "target": "workbench.action.navigateBack"
+  },
+  {
+    "id": "studio.forward",
+    "title": "Navigate Forward",
+    "key": "ctrl+alt+right",
+    "target": "workbench.action.navigateForward"
+  },
+  {
+    "id": "studio.project",
+    "title": "Project Tool Window",
+    "key": "alt+1",
+    "target": "workbench.view.explorer"
+  },
+  {
+    "id": "studio.git",
+    "title": "Git Tool Window",
+    "key": "alt+9",
+    "target": "studio.gitLog.focus"
+  },
+  {
+    "id": "studio.terminal",
+    "title": "Terminal Tool Window",
+    "key": "alt+f12",
+    "target": "workbench.action.terminal.toggleTerminal"
+  },
+  {
+    "id": "studio.problems",
+    "title": "Problems Tool Window",
+    "key": "alt+6",
+    "target": "workbench.actions.view.problems"
+  },
+  {
+    "id": "studio.run",
+    "title": "Run",
+    "key": "shift+f10",
+    "handler": "run"
+  },
+  {
+    "id": "studio.debug",
+    "title": "Debug",
+    "key": "shift+f9",
+    "handler": "debug"
+  },
+  {
+    "id": "studio.stop",
+    "title": "Stop",
+    "key": "ctrl+f2",
+    "when": "inDebugMode",
+    "target": "workbench.action.debug.stop"
+  },
+  {
+    "id": "studio.commit",
+    "title": "Commit Tool Window",
+    "key": "ctrl+k",
+    "target": "studio.commitView.focus"
+  },
+  {
+    "id": "studio.branches",
+    "title": "Branches and VCS Actions",
+    "key": "alt+backquote",
+    "handler": "branches"
+  },
+  {
+    "id": "studio.gitHistory",
+    "title": "Git History",
+    "target": "studio.gitLog.focus"
+  },
+  {
+    "id": "studio.settings",
+    "title": "Settings",
+    "key": "ctrl+alt+s",
+    "target": "workbench.action.openSettings"
+  },
+  {
+    "id": "studio.commitWindow",
+    "title": "Commit Tool Window",
+    "key": "alt+0",
+    "target": "studio.commitView.focus"
+  },
+  {
+    "id": "studio.findAction",
+    "title": "Find Action",
+    "key": "ctrl+shift+a",
+    "target": "workbench.action.showCommands"
+  },
+  {
+    "id": "studio.goToClass",
+    "title": "Go to Class",
+    "key": "ctrl+n",
+    "handler": "classes"
+  },
+  {
+    "id": "studio.fileStructure",
+    "title": "File Structure",
+    "key": "ctrl+f12",
+    "target": "workbench.action.gotoSymbol"
+  },
+  {
+    "id": "studio.structure",
+    "title": "Structure Tool Window",
+    "key": "alt+7",
+    "target": "studio.nativeStructure"
+  },
+  {
+    "id": "studio.hideToolWindow",
+    "title": "Hide Active Tool Window",
+    "key": "shift+escape",
+    "target": "studio.nativeHideToolWindow",
+    "when": "!editorTextFocus"
+  },
+  {
+    "id": "studio.lastEdit",
+    "title": "Last Edit Location",
+    "key": "ctrl+shift+backspace",
+    "target": "workbench.action.navigateToLastEditLocation"
+  },
+  {
+    "id": "studio.goToLine",
+    "title": "Go to Line",
+    "key": "ctrl+g",
+    "target": "workbench.action.gotoLine"
+  },
+  {
+    "id": "studio.duplicate",
+    "title": "Duplicate Line or Selection",
+    "key": "ctrl+d",
+    "target": "editor.action.copyLinesDownAction",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "id": "studio.deleteLine",
+    "title": "Delete Line",
+    "key": "ctrl+y",
+    "target": "editor.action.deleteLines",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "id": "studio.joinLines",
+    "title": "Join Lines",
+    "key": "ctrl+shift+j",
+    "target": "editor.action.joinLines",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "id": "studio.expandSelection",
+    "title": "Extend Selection",
+    "key": "ctrl+w",
+    "target": "editor.action.smartSelect.expand",
+    "when": "editorTextFocus"
+  },
+  {
+    "id": "studio.shrinkSelection",
+    "title": "Shrink Selection",
+    "key": "ctrl+shift+w",
+    "target": "editor.action.smartSelect.shrink",
+    "when": "editorTextFocus"
+  },
+  {
+    "id": "studio.quickFix",
+    "title": "Show Intention Actions",
+    "key": "alt+enter",
+    "target": "editor.action.quickFix",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "id": "studio.organizeImports",
+    "title": "Optimize Imports",
+    "key": "ctrl+alt+o",
+    "target": "editor.action.organizeImports",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "id": "studio.indent",
+    "title": "Auto-Indent Lines",
+    "key": "ctrl+alt+i",
+    "target": "editor.action.reindentselectedlines",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "id": "studio.lineComment",
+    "title": "Comment with Line Comment",
+    "key": "ctrl+/",
+    "target": "editor.action.commentLine",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "id": "studio.blockComment",
+    "title": "Comment with Block Comment",
+    "key": "ctrl+shift+/",
+    "target": "editor.action.blockComment",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "id": "studio.moveLineUp",
+    "title": "Move Line Up",
+    "key": "alt+shift+up",
+    "target": "editor.action.moveLinesUpAction",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "id": "studio.moveLineDown",
+    "title": "Move Line Down",
+    "key": "alt+shift+down",
+    "target": "editor.action.moveLinesDownAction",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "id": "studio.closeTab",
+    "title": "Close Active Editor",
+    "key": "ctrl+f4",
+    "target": "workbench.action.closeActiveEditor"
+  },
+  {
+    "id": "studio.nextTab",
+    "title": "Next Editor Tab",
+    "key": "alt+right",
+    "target": "workbench.action.nextEditorInGroup"
+  },
+  {
+    "id": "studio.previousTab",
+    "title": "Previous Editor Tab",
+    "key": "alt+left",
+    "target": "workbench.action.previousEditorInGroup"
+  },
+  {
+    "id": "studio.replace",
+    "title": "Replace in File",
+    "key": "ctrl+r",
+    "target": "editor.action.startFindReplaceAction",
+    "when": "editorTextFocus"
+  },
+  {
+    "id": "studio.runWindow",
+    "title": "Run Tool Window",
+    "key": "alt+4",
+    "target": "workbench.view.debug"
+  },
+  {
+    "id": "studio.debugWindow",
+    "title": "Debug Tool Window",
+    "key": "alt+5",
+    "target": "workbench.view.debug"
+  },
+  {
+    "id": "studio.breakpoint",
+    "title": "Toggle Line Breakpoint",
+    "key": "ctrl+f8",
+    "target": "editor.debug.action.toggleBreakpoint",
+    "when": "editorTextFocus"
+  },
+  {
+    "id": "studio.resume",
+    "title": "Resume Program",
+    "key": "f9",
+    "target": "workbench.action.debug.continue",
+    "when": "inDebugMode"
+  },
+  {
+    "id": "studio.stepOver",
+    "title": "Step Over",
+    "key": "f8",
+    "target": "workbench.action.debug.stepOver",
+    "when": "inDebugMode"
+  },
+  {
+    "id": "studio.stepInto",
+    "title": "Step Into",
+    "key": "f7",
+    "target": "workbench.action.debug.stepInto",
+    "when": "inDebugMode"
+  },
+  {
+    "id": "studio.stepOut",
+    "title": "Step Out",
+    "key": "shift+f8",
+    "target": "workbench.action.debug.stepOut",
+    "when": "inDebugMode"
+  },
+  {
+    "id": "studio.push",
+    "title": "Push…",
+    "key": "ctrl+shift+k",
+    "target": "git.push"
+  },
+  {
+    "id": "studio.updateProject",
+    "title": "Update Project…",
+    "key": "ctrl+t",
+    "target": "git.pull"
+  },
+  {
+    "id": "studio.projects",
+    "title": "Open or Switch Project",
+    "handler": "projects"
+  },
+  {
+    "id": "studio.runConfigurations",
+    "title": "Run/Debug Configurations",
+    "handler": "runConfigurations"
+  },
+  {
+    "id": "studio.toolWindows",
+    "title": "More Tool Windows",
+    "handler": "toolWindows"
+  },
+  {
+    "id": "studio.goToSymbol",
+    "title": "Go to Symbol",
+    "key": "ctrl+alt+shift+n",
+    "target": "workbench.action.showAllSymbols"
+  }
+]

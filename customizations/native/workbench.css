@@ -1,0 +1,37 @@
+/* Original Studio shell, native desktop application chrome. */
+@font-face { font-family: StudioInter; src: url('./fonts/InterVariable.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+.monaco-workbench { font-family: StudioInter, Inter, 'Segoe UI', sans-serif; font-size: 13px; }
+.monaco-workbench .part.titlebar { border-bottom: 1px solid #1e1f22; width: calc(100% + 40px) !important; background: #2b2d30 !important; }
+.monaco-workbench .part.statusbar { width: calc(100% + 40px) !important; }
+.monaco-workbench .part.titlebar .titlebar-left,.monaco-workbench .part.titlebar .titlebar-center { visibility: hidden; }
+.monaco-workbench .part.titlebar .titlebar-right > :not(.window-controls-container) { display: none !important; }
+.monaco-workbench .part.titlebar .window-controls-container { height: 48px !important; }
+.studio-header { position: absolute; inset: 0 138px 0 0; height: 48px; display: flex; align-items: center; gap: 5px; padding: 0 8px; z-index: 100; -webkit-app-region: drag; color: #bcbec4; }
+.studio-control { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: transparent; color: inherit; border-radius: 5px; height: 32px; min-width: 32px; padding: 0 7px; cursor: pointer; font: inherit; -webkit-app-region: no-drag; }
+.studio-control:hover { background: #43454a; } .studio-control:focus-visible { outline: 2px solid #548af7; outline-offset: -2px; }
+.studio-control .codicon { font-size: 19px; } .studio-control .codicon-chevron-down { font-size: 13px; opacity: .75; }
+.studio-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studio-project-widget { font-weight: 600; max-width: 240px; padding-right: 9px; } .studio-project-badge { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 5px; background: linear-gradient(135deg,#7465ce,#a566a0); color: white; font-size: 10px; font-weight: 650; flex-shrink: 0; }
+.studio-vcs-widget { max-width: 220px; } .studio-header-spacer { flex: 1; min-width: 8px; -webkit-app-region: drag; } .studio-run-widget { max-width: 220px; }
+.studio-control.studio-run { color: #6aab73; } .studio-header-divider { height: 20px; width: 1px; margin: 0 4px; background: #43454a; }
+.monaco-workbench .part.activitybar { background: #2b2d30 !important; border-right: 1px solid #1e1f22; }
+.monaco-workbench .part.activitybar > :not(.studio-left-rail) { visibility: hidden; pointer-events: none; }
+.studio-rail { background: #2b2d30; display: flex; flex-direction: column; align-items: center; padding: 5px 0; color: #afb1b8; z-index: 80; }
+.studio-left-rail { position: absolute; inset: 0; } .studio-right-rail { position: absolute; top: 48px; right: 0; bottom: 22px; width: 40px; border-left: 1px solid #1e1f22; }
+.studio-rail .studio-control { margin: 2px 0; width: 32px; height: 32px; padding: 0; } .studio-rail .studio-control .codicon { font-size: 21px; }
+.studio-rail .studio-control.active { background: #414449; color: #dfe1e5; } .studio-rail-bottom { margin-top: auto; display: flex; flex-direction: column; align-items: center; }
+.studio-rail-separator { margin: 7px 0; width: 24px; border-top: 1px solid #43454a; }
+.monaco-workbench .part > .title > .title-label h2 { text-transform: none; font-size: 13px; font-weight: 600; color: #dfe1e5; }
+.monaco-workbench .part.sidebar > .title { height: 35px; border-bottom: 1px solid #393b40; padding-left: 12px; }
+.monaco-workbench .part.sidebar .title-actions { opacity: .7; }
+.monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab { border-right: 0; padding-left: 12px; }
+.monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab.active { box-shadow: inset 0 -2px #548af7; }
+.monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab .tab-label { font-size: 13px; }
+.monaco-workbench .part.panel > .title { border-bottom: 1px solid #393b40; background: #2b2d30; }
+.monaco-workbench .part.panel .composite.title .action-label { text-transform: none; }
+.monaco-workbench .part.sidebar .pane-header { font-weight: 500; text-transform: none; }
+.monaco-workbench .quick-input-widget { border: 1px solid #4e5157; border-radius: 8px; box-shadow: 0 12px 40px #0008; }
+.monaco-workbench .quick-input-titlebar { min-height: 30px; font-weight: 600; } .monaco-workbench .quick-input-list .monaco-list-row { border-radius: 4px; }
+.monaco-workbench .part.sidebar .monaco-icon-label:before { background-size: 18px; }
+@media(max-width: 1000px) { .studio-project-widget { max-width:160px; } .studio-vcs-widget { max-width:130px; } .studio-run-widget { max-width:140px; } }
+@media(max-width: 760px) { .studio-run-widget { display:none; } .studio-project-widget { max-width:130px; } .studio-vcs-widget { max-width:100px; } }

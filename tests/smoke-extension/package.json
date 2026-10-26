@@ -1,0 +1,7 @@
+{
+  "name": "studio-smoke-tests",
+  "publisher": "studio-n-code",
+  "version": "0.0.1",
+  "engines": { "vscode": "^1.100.0" },
+  "main": "./test.cjs"
+}
