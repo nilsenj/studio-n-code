@@ -48,15 +48,18 @@ jobs:
     if: ${{ always() && (needs.windows.result == 'success' || needs.windows.result == 'skipped') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 120
+    env:
+      CC: gcc-11
+      CXX: g++-11
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          # native-keymap does not compile against Node 24.21 on Ubuntu yet.
+          # Keep the Linux release toolchain aligned with the verified local build.
           node-version: '24.18.0'
           cache: npm
       - name: Install Linux build dependencies
-        run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libx11-dev libx11-xcb-dev libxkbfile-dev libnotify-bin libkrb5-dev
+        run: sudo apt-get update && sudo apt-get install -y build-essential gcc-11 g++-11 pkg-config libx11-dev libx11-xcb-dev libxkbfile-dev libnotify-bin libkrb5-dev
       - run: npm ci
       - name: Build Linux x64 package and installer
         run: bash ./scripts/package-linux.sh
