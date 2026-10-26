@@ -3,7 +3,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [package.json]
+    paths:
+      - package.json
+      - .github/workflows/release.yml
 permissions:
   contents: write
 concurrency:
@@ -11,6 +13,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   windows:
+    # A [linux-only] workflow-fix commit can add Linux assets to an existing release.
+    if: ${{ !contains(github.event.head_commit.message || '', '[linux-only]') }}
     runs-on: windows-2022
     timeout-minutes: 90
     steps:
@@ -41,13 +45,15 @@ jobs:
 
   linux:
     needs: windows
+    if: ${{ always() && (needs.windows.result == 'success' || needs.windows.result == 'skipped') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: '24'
+          # native-keymap does not compile against Node 24.21 on Ubuntu yet.
+          node-version: '24.18.0'
           cache: npm
       - name: Install Linux build dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libx11-dev libx11-xcb-dev libxkbfile-dev libnotify-bin libkrb5-dev
